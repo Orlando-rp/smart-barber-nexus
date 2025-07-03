@@ -39,7 +39,7 @@ export const ProtectedRoute = ({ children, requireSuperAdmin = false }: Protecte
       navigate('/admin')
       return
     }
-      
+     
       // Verificar se usuário tem acesso à rota protegida para super admin
       if (requireSuperAdmin && !isSuperAdmin) {
         console.log('Redirecting non-super-admin from protected route')
