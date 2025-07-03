@@ -1,7 +1,7 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { FinanceiroOverview } from "@/components/financeiro/FinanceiroOverview"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { AddMovimentacaoDialog } from "@/components/financeiro/AddMovimentacaoDialog"
+
 
 const Financeiro = () => {
   return (
@@ -15,10 +15,7 @@ const Financeiro = () => {
               Gerencie suas receitas, despesas e comissões dos profissionais.
             </p>
           </div>
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Movimentação
-          </Button>
+          <AddMovimentacaoDialog />
         </div>
 
         {/* Financeiro Overview */}

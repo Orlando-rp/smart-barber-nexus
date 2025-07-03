@@ -2,13 +2,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useFinanceiro } from "@/hooks/useFinanceiro"
-import { DollarSign, TrendingUp, TrendingDown, Clock, Users } from "lucide-react"
+import { DollarSign, TrendingUp, TrendingDown, Clock, Users, CheckCircle } from "lucide-react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import { useToast } from "@/hooks/use-toast"
 
 export function FinanceiroOverview() {
-  const { comissoes, movimentacoes, loading, getResumoFinanceiro } = useFinanceiro()
+  const { comissoes, movimentacoes, loading, getResumoFinanceiro, marcarComoPago } = useFinanceiro()
   const resumo = getResumoFinanceiro()
+  const { toast } = useToast()
+
+  const handleMarcarComoPago = async (id: string) => {
+    const result = await marcarComoPago(id)
+    if (result.success) {
+      toast({
+        title: "Sucesso",
+        description: "Movimentação marcada como paga!"
+      })
+    } else {
+      toast({
+        title: "Erro",
+        description: "Erro ao marcar como pago. Tente novamente.",
+        variant: "destructive"
+      })
+    }
+  }
 
   if (loading) {
     return <div className="flex justify-center p-8">Carregando dados financeiros...</div>
@@ -127,9 +145,21 @@ export function FinanceiroOverview() {
                       {mov.tipo === 'receita' ? '+' : '-'}R$ {Number(mov.valor).toFixed(2)}
                     </div>
                   </div>
-                  <Badge variant={mov.status === 'pago' ? 'default' : 'secondary'}>
-                    {mov.status}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={mov.status === 'pago' ? 'default' : 'secondary'}>
+                      {mov.status}
+                    </Badge>
+                    {mov.status === 'pendente' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleMarcarComoPago(mov.id)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
