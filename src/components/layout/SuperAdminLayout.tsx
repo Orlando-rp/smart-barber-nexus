@@ -1,9 +1,9 @@
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
-import { SuperAdminSidebar } from "./SuperAdminSidebar";
-import { Bell, Search, User, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useAuth } from "@/contexts/AuthContext";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar"
+import { SuperAdminSidebar } from "./SuperAdminSidebar"
+import { Bell, Search, User, LogOut } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { useAuth } from "@/contexts/AuthContext"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,11 +11,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Outlet } from "react-router-dom";
+} from "@/components/ui/dropdown-menu"
+import { Outlet } from "react-router-dom"
 
 export function SuperAdminLayout() {
-  const { user, signOut } = useAuth();
+  const { user, signOut } = useAuth()
 
   return (
     <SidebarProvider>
@@ -69,12 +69,12 @@ export function SuperAdminLayout() {
             </div>
           </header>
 
-          {/* Conteúdo da Rota Injetado via <Outlet /> */}
+          {/* Main Content */}
           <main className="flex-1 p-6">
             <Outlet />
           </main>
         </SidebarInset>
       </div>
     </SidebarProvider>
-  );
+  )
 }
