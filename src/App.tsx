@@ -18,6 +18,7 @@ import Analytics from "./pages/Analytics";
 import Financeiro from "./pages/Financeiro";
 import Profissionais from "./pages/Profissionais";
 import Notificacoes from "./pages/Notificacoes";
+import Configuracoes from "./pages/Configuracoes";
 
 const queryClient = new QueryClient();
 
@@ -73,6 +74,11 @@ const App = () => (
             <Route path="/notificacoes" element={
               <ProtectedRoute>
                 <Notificacoes />
+              </ProtectedRoute>
+            } />
+            <Route path="/configuracoes" element={
+              <ProtectedRoute>
+                <Configuracoes />
               </ProtectedRoute>
             } />
             <Route path="/agendar/:slug" element={<AgendarPublico />} />
