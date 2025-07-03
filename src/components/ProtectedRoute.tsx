@@ -34,11 +34,11 @@ export const ProtectedRoute = ({ children, requireSuperAdmin = false }: Protecte
       console.log('Correct path for user:', correctPath)
       
       // Se está na página raiz e deveria estar na página de admin
-      if (location.pathname === '/' && correctPath === '/admin') {
-        console.log('Redirecting super admin to /admin')
-        navigate('/admin')
-        return
-      }
+    if (correctPath === '/admin' && location.pathname !== '/admin') {
+      console.log('Super admin logado e fora de /admin, redirecionando...')
+      navigate('/admin')
+      return
+    }
       
       // Verificar se usuário tem acesso à rota protegida para super admin
       if (requireSuperAdmin && !isSuperAdmin) {

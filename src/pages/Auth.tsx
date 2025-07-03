@@ -222,7 +222,7 @@ const Auth = () => {
               <Scissors className="w-6 h-6 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">BarberSmart</CardTitle>
+          <CardTitle className="text-2xl font-bold">Barber Smart</CardTitle>
           <CardDescription>
             Gestão Inteligente para sua Barbearia
           </CardDescription>
