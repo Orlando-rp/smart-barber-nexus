@@ -9,9 +9,60 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      agendamento_historico: {
+        Row: {
+          acao: string
+          agendamento_id: string
+          created_at: string
+          data_anterior: string | null
+          data_nova: string | null
+          id: string
+          motivo: string | null
+          status_anterior: string | null
+          status_novo: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          acao: string
+          agendamento_id: string
+          created_at?: string
+          data_anterior?: string | null
+          data_nova?: string | null
+          id?: string
+          motivo?: string | null
+          status_anterior?: string | null
+          status_novo?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          acao?: string
+          agendamento_id?: string
+          created_at?: string
+          data_anterior?: string | null
+          data_nova?: string | null
+          id?: string
+          motivo?: string | null
+          status_anterior?: string | null
+          status_novo?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agendamento_historico_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agendamentos: {
         Row: {
-          cliente_id: string
+          agendamento_origem: string | null
+          cliente_email: string | null
+          cliente_id: string | null
+          cliente_nome: string | null
+          cliente_telefone: string | null
           created_at: string
           data_hora: string
           duracao_minutos: number
@@ -19,13 +70,19 @@ export type Database = {
           observacoes: string | null
           preco: number
           profissional_id: string
+          reagendamentos_count: number | null
           servico_id: string
           status: string
+          token_link: string | null
           unidade_id: string
           updated_at: string
         }
         Insert: {
-          cliente_id: string
+          agendamento_origem?: string | null
+          cliente_email?: string | null
+          cliente_id?: string | null
+          cliente_nome?: string | null
+          cliente_telefone?: string | null
           created_at?: string
           data_hora: string
           duracao_minutos: number
@@ -33,13 +90,19 @@ export type Database = {
           observacoes?: string | null
           preco: number
           profissional_id: string
+          reagendamentos_count?: number | null
           servico_id: string
           status?: string
+          token_link?: string | null
           unidade_id: string
           updated_at?: string
         }
         Update: {
-          cliente_id?: string
+          agendamento_origem?: string | null
+          cliente_email?: string | null
+          cliente_id?: string | null
+          cliente_nome?: string | null
+          cliente_telefone?: string | null
           created_at?: string
           data_hora?: string
           duracao_minutos?: number
@@ -47,8 +110,10 @@ export type Database = {
           observacoes?: string | null
           preco?: number
           profissional_id?: string
+          reagendamentos_count?: number | null
           servico_id?: string
           status?: string
+          token_link?: string | null
           unidade_id?: string
           updated_at?: string
         }
@@ -129,6 +194,106 @@ export type Database = {
             columns: ["unidade_id"]
             isOneToOne: false
             referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      configuracoes_agendamento: {
+        Row: {
+          antecedencia_minima_horas: number | null
+          cor_tema: string | null
+          created_at: string
+          horario_limite_cancelamento: number | null
+          id: string
+          logo_url: string | null
+          max_reagendamentos: number | null
+          mensagem_boas_vindas: string | null
+          permite_agendamento_publico: boolean | null
+          permite_cancelamento: boolean | null
+          slug_publico: string | null
+          unidade_id: string
+          updated_at: string
+        }
+        Insert: {
+          antecedencia_minima_horas?: number | null
+          cor_tema?: string | null
+          created_at?: string
+          horario_limite_cancelamento?: number | null
+          id?: string
+          logo_url?: string | null
+          max_reagendamentos?: number | null
+          mensagem_boas_vindas?: string | null
+          permite_agendamento_publico?: boolean | null
+          permite_cancelamento?: boolean | null
+          slug_publico?: string | null
+          unidade_id: string
+          updated_at?: string
+        }
+        Update: {
+          antecedencia_minima_horas?: number | null
+          cor_tema?: string | null
+          created_at?: string
+          horario_limite_cancelamento?: number | null
+          id?: string
+          logo_url?: string | null
+          max_reagendamentos?: number | null
+          mensagem_boas_vindas?: string | null
+          permite_agendamento_publico?: boolean | null
+          permite_cancelamento?: boolean | null
+          slug_publico?: string | null
+          unidade_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "configuracoes_agendamento_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: true
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      logs_notificacoes: {
+        Row: {
+          agendamento_id: string
+          canal: string
+          created_at: string
+          destinatario: string
+          id: string
+          resposta_api: Json | null
+          status: string
+          tentativas: number | null
+          tipo: string
+        }
+        Insert: {
+          agendamento_id: string
+          canal: string
+          created_at?: string
+          destinatario: string
+          id?: string
+          resposta_api?: Json | null
+          status: string
+          tentativas?: number | null
+          tipo: string
+        }
+        Update: {
+          agendamento_id?: string
+          canal?: string
+          created_at?: string
+          destinatario?: string
+          id?: string
+          resposta_api?: Json | null
+          status?: string
+          tentativas?: number | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "logs_notificacoes_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos"
             referencedColumns: ["id"]
           },
         ]
@@ -281,6 +446,47 @@ export type Database = {
           },
         ]
       }
+      templates_mensagens: {
+        Row: {
+          ativo: boolean | null
+          canal: string
+          created_at: string
+          id: string
+          template: string
+          tipo: string
+          unidade_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          canal: string
+          created_at?: string
+          id?: string
+          template: string
+          tipo: string
+          unidade_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          canal?: string
+          created_at?: string
+          id?: string
+          template?: string
+          tipo?: string
+          unidade_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "templates_mensagens_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       unidades: {
         Row: {
           ativo: boolean
@@ -415,6 +621,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_agendamento_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_user_saas_client_id: {
         Args: { _user_id: string }
         Returns: string
