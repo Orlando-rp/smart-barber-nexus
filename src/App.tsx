@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
@@ -23,11 +23,12 @@ import Notificacoes from "./pages/Notificacoes";
 import Configuracoes from "./pages/Configuracoes";
 
 // Admin
-import AdminLayout from "./pages/admin/AdminLayout";
+import { SuperAdminLayout } from "@/components/layouts/SuperAdminLayout"; // 👈 certifique-se do caminho
 import ClientesSaas from "./pages/admin/ClientesSaas";
 import RelatoriosAdmin from "./pages/admin/RelatoriosAdmin";
 import SistemaConfiguracoes from "./pages/admin/SistemaConfiguracoes";
 import UsuariosAdmin from "./pages/admin/UsuariosAdmin";
+import DashboardSaas from "./pages/admin/DashboardSaas"; // 👈 caso tenha uma página inicial de admin
 
 const queryClient = new QueryClient();
 
@@ -80,50 +81,3 @@ const App = () => (
             <Route path="/financeiro" element={
               <ProtectedRoute>
                 <Financeiro />
-              </ProtectedRoute>
-            } />
-
-            <Route path="/profissionais" element={
-              <ProtectedRoute>
-                <Profissionais />
-              </ProtectedRoute>
-            } />
-
-            <Route path="/notificacoes" element={
-              <ProtectedRoute>
-                <Notificacoes />
-              </ProtectedRoute>
-            } />
-
-            <Route path="/configuracoes" element={
-              <ProtectedRoute>
-                <Configuracoes />
-              </ProtectedRoute>
-            } />
-
-            {/* Rota de layout para páginas do painel admin */}
-            <Route path="/admin" element={
-              <ProtectedRoute requireSuperAdmin={true}>
-                <AdminLayout />
-              </ProtectedRoute>
-            }>
-              <Route path="clientes" element={<ClientesSaas />} />
-              <Route path="relatorios" element={<RelatoriosAdmin />} />
-              <Route path="sistema" element={<SistemaConfiguracoes />} />
-              <Route path="usuarios" element={<UsuariosAdmin />} />
-            </Route>
-
-            {/* Rotas públicas */}
-            <Route path="/agendar/:slug" element={<AgendarPublico />} />
-            <Route path="/agendamento/:token" element={<GerenciarAgendamento />} />
-
-            {/* Rota de erro 404 */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
-
-export default App;
