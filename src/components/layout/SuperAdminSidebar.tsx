@@ -1,5 +1,14 @@
-import { Crown, BarChart3, Users, Settings, Database, FileText, Shield, Building2 } from "lucide-react"
-import { NavLink, useLocation } from "react-router-dom"
+import {
+  Crown,
+  BarChart3,
+  Users,
+  Settings,
+  Database,
+  FileText,
+  Shield,
+  Building2,
+} from "lucide-react";
+import { NavLink, useLocation } from "react-router-dom";
 
 import {
   Sidebar,
@@ -12,7 +21,7 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 const menuItems = [
   {
@@ -22,39 +31,39 @@ const menuItems = [
   },
   {
     title: "Clientes SaaS",
-    url: "/admin/clients",
+    url: "/admin/clientes", // corrigido
     icon: Building2,
   },
   {
     title: "Relatórios",
-    url: "/admin/reports",
+    url: "/admin/relatorios", // corrigido
     icon: FileText,
   },
   {
     title: "Sistema",
-    url: "/admin/system",
+    url: "/admin/sistema", // corrigido
     icon: Database,
   },
-]
+];
 
 const bottomMenuItems = [
   {
     title: "Usuários Admin",
-    url: "/admin/users",
+    url: "/admin/usuarios", // corrigido
     icon: Users,
   },
   {
     title: "Configurações",
-    url: "/admin/settings",
+    url: "/admin/configuracoes", // corrigido
     icon: Settings,
   },
-]
+];
 
 export function SuperAdminSidebar() {
-  const location = useLocation()
-  const currentPath = location.pathname
+  const location = useLocation();
+  const currentPath = location.pathname;
 
-  const isActive = (path: string) => currentPath === path
+  const isActive = (path: string) => currentPath === path;
 
   return (
     <Sidebar className="border-r border-sidebar-border">
@@ -126,5 +135,5 @@ export function SuperAdminSidebar() {
         </div>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }
