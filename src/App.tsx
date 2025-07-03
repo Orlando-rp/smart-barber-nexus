@@ -23,7 +23,7 @@ import Notificacoes from "./pages/Notificacoes";
 import Configuracoes from "./pages/Configuracoes";
 
 // Admin
-import { SuperAdminLayout } from "@/components/layouts/SuperAdminLayout";
+import { SuperAdminLayout } from "@/components/layout/SuperAdminLayout";
 import DashboardSaas from "./pages/admin/DashboardSaas";
 import ClientesSaas from "./pages/admin/ClientesSaas";
 import RelatoriosAdmin from "./pages/admin/RelatoriosAdmin";
