@@ -1,9 +1,9 @@
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar"
-import { SuperAdminSidebar } from "./SuperAdminSidebar"
-import { Bell, Search, User, LogOut } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { useAuth } from "@/contexts/AuthContext"
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
+import { SuperAdminSidebar } from "./SuperAdminSidebar";
+import { Bell, Search, User, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,26 +11,23 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
+import { Outlet } from "react-router-dom";
 
-interface SuperAdminLayoutProps {
-  children: React.ReactNode
-}
-
-export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
-  const { user, signOut } = useAuth()
+export function SuperAdminLayout() {
+  const { user, signOut } = useAuth();
 
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <SuperAdminSidebar />
-        
+
         <SidebarInset className="flex-1">
           {/* Header */}
           <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="flex h-14 items-center gap-4 px-4">
               <SidebarTrigger className="-ml-1" />
-              
+
               <div className="flex flex-1 items-center gap-4">
                 <div className="relative flex-1 max-w-md">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -45,7 +42,7 @@ export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
                 <Button variant="ghost" size="icon">
                   <Bell className="h-4 w-4" />
                 </Button>
-                
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
@@ -72,12 +69,12 @@ export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
             </div>
           </header>
 
-          {/* Main Content */}
+          {/* Conteúdo da Rota Injetado via <Outlet /> */}
           <main className="flex-1 p-6">
-            {children}
+            <Outlet />
           </main>
         </SidebarInset>
       </div>
     </SidebarProvider>
-  )
+  );
 }
