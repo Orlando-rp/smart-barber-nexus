@@ -33,49 +33,59 @@ export const useDashboardData = () => {
   const fetchDashboardData = async () => {
     try {
       // Verificar se tem unidades cadastradas
-      const { data: unidades } = await supabase
-        .from('unidades')
-        .select('id')
-        .eq('saas_client_id', userProfile?.saas_client_id)
+      let unidadesQuery = supabase.from('unidades').select('id')
+      if (!isSuperAdmin && userProfile?.saas_client_id) {
+        unidadesQuery = unidadesQuery.eq('saas_client_id', userProfile.saas_client_id)
+      }
 
+      const { data: unidades } = await unidadesQuery
       setHasUnidades((unidades?.length || 0) > 0)
 
       if (unidades && unidades.length > 0) {
-        // Buscar estatísticas se tem unidades
-        const today = new Date().toISOString().split('T')[0]
-        const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
-        const lastDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString()
+        const unidadeIds = unidades.map(u => u.id)
+        
+        // Dates for calculations
+        const today = new Date()
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+        const tomorrowStart = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000)
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+        const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59)
 
         // Agendamentos hoje
         const { data: agendamentosHoje } = await supabase
           .from('agendamentos')
-          .select('id')
-          .gte('data_hora', today)
-          .lt('data_hora', new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-          .in('unidade_id', unidades.map(u => u.id))
+          .select('id, status')
+          .in('unidade_id', unidadeIds)
+          .gte('data_hora', todayStart.toISOString())
+          .lt('data_hora', tomorrowStart.toISOString())
 
         // Faturamento mensal
         const { data: agendamentosMes } = await supabase
           .from('agendamentos')
           .select('preco')
-          .gte('data_hora', firstDayOfMonth)
-          .lte('data_hora', lastDayOfMonth)
+          .in('unidade_id', unidadeIds)
+          .gte('data_hora', firstDayOfMonth.toISOString())
+          .lte('data_hora', lastDayOfMonth.toISOString())
           .eq('status', 'concluido')
-          .in('unidade_id', unidades.map(u => u.id))
 
-        // Clientes únicos
+        // Clientes únicos de todas as unidades
         const { data: clientes } = await supabase
           .from('clientes')
           .select('id')
-          .eq('unidade_id', unidades[0].id)
+          .in('unidade_id', unidadeIds)
 
         const faturamento = agendamentosMes?.reduce((sum, a) => sum + (Number(a.preco) || 0), 0) || 0
+        
+        // Calculate occupancy rate based on confirmed/completed appointments today
+        const totalHoje = agendamentosHoje?.length || 0
+        const confirmadosHoje = agendamentosHoje?.filter(a => ['confirmado', 'concluido', 'em_andamento'].includes(a.status)).length || 0
+        const taxaOcupacao = totalHoje > 0 ? Math.round((confirmadosHoje / totalHoje) * 100) : 0
 
         setStats({
-          agendamentosHoje: agendamentosHoje?.length || 0,
+          agendamentosHoje: totalHoje,
           faturamentoMensal: faturamento,
           clientesAtivos: clientes?.length || 0,
-          taxaOcupacao: 85 // Placeholder por enquanto
+          taxaOcupacao
         })
       }
     } catch (error: any) {
