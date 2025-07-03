@@ -51,16 +51,47 @@ serve(async (req) => {
 
     const { data: agendamentos } = await query
 
-    // Gerar slots de horário (08:00 às 18:00, intervalos de 30min)
-    const slots = []
-    const startHour = 8
-    const endHour = 18
-    const interval = 30
+    // Obter horário de funcionamento da data específica
+    const dayOfWeek = new Date(data).getDay()
+    const daysMap = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado']
+    const dayName = daysMap[dayOfWeek]
+    
+    const horarioFuncionamento = unidade.horario_funcionamento?.[dayName]
+    
+    if (!horarioFuncionamento) {
+      // Não funciona neste dia
+      return new Response(
+        JSON.stringify({ slots: [] }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
-    for (let hour = startHour; hour < endHour; hour++) {
-      for (let minute = 0; minute < 60; minute += interval) {
+    const [startHour, startMinute] = horarioFuncionamento.inicio.split(':').map(Number)
+    const [endHour, endMinute] = horarioFuncionamento.fim.split(':').map(Number)
+    
+    // Gerar slots de horário baseado no funcionamento
+    const slots = []
+    const interval = 30 // Intervalos de 30 minutos
+    const now = new Date()
+    const today = new Date().toISOString().split('T')[0]
+    const isToday = data === today
+
+    // Gerar horários disponíveis
+    for (let hour = startHour; hour < endHour || (hour === endHour && startMinute === 0); hour++) {
+      const maxMinute = hour === endHour ? endMinute : 60
+      
+      for (let minute = hour === startHour ? Math.ceil(startMinute / interval) * interval : 0; 
+           minute < maxMinute; 
+           minute += interval) {
+        
         const slotTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
         const slotDateTime = `${data}T${slotTime}:00`
+        const slotDate = new Date(slotDateTime)
+        
+        // Verificar se o horário já passou (para hoje)
+        if (isToday && slotDate <= now) {
+          continue
+        }
         
         // Verificar se há conflito com agendamentos existentes
         const hasConflict = agendamentos?.some(ag => {
@@ -69,12 +100,18 @@ serve(async (req) => {
           const slotStart = new Date(slotDateTime)
           const slotEnd = new Date(slotStart.getTime() + servico.duracao_minutos * 60000)
           
+          // Verificar sobreposição
           return (slotStart < agEnd && slotEnd > agStart)
         })
 
+        // Verificar se o serviço cabe no horário de funcionamento
+        const slotEnd = new Date(slotDate.getTime() + servico.duracao_minutos * 60000)
+        const funcionamentoEnd = new Date(`${data}T${horarioFuncionamento.fim}:00`)
+        const serviceCabeFuncionamento = slotEnd <= funcionamentoEnd
+
         slots.push({
           data_hora: slotDateTime,
-          disponivel: !hasConflict && new Date(slotDateTime) > new Date(),
+          disponivel: !hasConflict && serviceCabeFuncionamento,
           profissional_id
         })
       }

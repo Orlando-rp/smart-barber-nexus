@@ -8,7 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Calendar } from '@/components/ui/calendar'
+import { CalendarioPersonalizado } from '@/components/agendamento/CalendarioPersonalizado'
+import { SeletorHorarios } from '@/components/agendamento/SeletorHorarios'
+import { ServiceCard } from '@/components/agendamento/ServiceCard'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Calendar as CalendarIcon, Clock, MapPin, Phone, User, DollarSign } from 'lucide-react'
@@ -167,15 +169,26 @@ export default function AgendarPublico() {
         <div className="max-w-2xl mx-auto">
           {/* Progress Steps */}
           <div className="flex items-center justify-center mb-8">
-            {[1, 2, 3].map((num) => (
+            {[
+              { num: 1, title: 'Serviço' },
+              { num: 2, title: 'Data & Horário' },
+              { num: 3, title: 'Dados' }
+            ].map(({ num, title }, index) => (
               <div key={num} className="flex items-center">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium ${
-                  step >= num ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                }`}>
-                  {num}
+                <div className="flex flex-col items-center">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-medium transition-all duration-300 ${
+                    step >= num ? 'bg-primary text-primary-foreground shadow-lg scale-110' : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {step > num ? '✓' : num}
+                  </div>
+                  <span className={`text-xs mt-2 transition-colors ${
+                    step >= num ? 'text-primary font-medium' : 'text-muted-foreground'
+                  }`}>
+                    {title}
+                  </span>
                 </div>
-                {num < 3 && (
-                  <div className={`w-16 h-1 mx-2 ${
+                {index < 2 && (
+                  <div className={`w-20 h-1 mx-4 rounded-full transition-all duration-300 ${
                     step > num ? 'bg-primary' : 'bg-muted'
                   }`} />
                 )}
@@ -185,10 +198,12 @@ export default function AgendarPublico() {
 
           {/* Step 1: Escolher Profissional e Serviço */}
           {step === 1 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Escolha o Profissional e Serviço</CardTitle>
-                <CardDescription>{unidade.configuracao?.mensagem_boas_vindas}</CardDescription>
+            <Card className="animate-fade-in">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl">Escolha o Profissional e Serviço</CardTitle>
+                <CardDescription className="text-base">
+                  {unidade.configuracao?.mensagem_boas_vindas}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
@@ -215,41 +230,21 @@ export default function AgendarPublico() {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Serviço</Label>
-                  <div className="grid gap-3">
+                <div className="space-y-3">
+                  <Label className="text-base font-medium">Nossos Serviços</Label>
+                  <div className="grid gap-3 max-h-96 overflow-y-auto">
                     {servicos.map((servico) => (
-                      <div
+                      <ServiceCard
                         key={servico.id}
-                        className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                          selectedServico === servico.id
-                            ? 'border-primary bg-primary/5'
-                            : 'border-border hover:border-primary/50'
-                        }`}
+                        id={servico.id}
+                        nome={servico.nome}
+                        descricao={servico.descricao}
+                        categoria={servico.categoria}
+                        duracao_minutos={servico.duracao_minutos}
+                        preco={servico.preco}
+                        selected={selectedServico === servico.id}
                         onClick={() => setSelectedServico(servico.id)}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="space-y-1">
-                            <h3 className="font-medium">{servico.nome}</h3>
-                            {servico.descricao && (
-                              <p className="text-sm text-muted-foreground">{servico.descricao}</p>
-                            )}
-                            <div className="flex items-center gap-4 text-sm">
-                              <div className="flex items-center gap-1">
-                                <Clock className="w-4 h-4" />
-                                {servico.duracao_minutos}min
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <DollarSign className="w-4 h-4" />
-                                {formatCurrency(servico.preco)}
-                              </div>
-                            </div>
-                          </div>
-                          {servico.categoria && (
-                            <Badge variant="secondary">{servico.categoria}</Badge>
-                          )}
-                        </div>
-                      </div>
+                      />
                     ))}
                   </div>
                 </div>
@@ -267,62 +262,45 @@ export default function AgendarPublico() {
 
           {/* Step 2: Escolher Data e Horário */}
           {step === 2 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Escolha Data e Horário</CardTitle>
-                <CardDescription>
-                  {selectedServicoObj?.nome} com {selectedProfissionalObj?.nome}
+            <Card className="animate-fade-in">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl">Escolha Data e Horário</CardTitle>
+                <CardDescription className="text-base">
+                  <span className="font-medium text-primary">{selectedServicoObj?.nome}</span> com {selectedProfissionalObj?.nome}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label>Data</Label>
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={handleDateSelect}
-                    disabled={(date) => date < startOfDay(new Date()) || date > addDays(new Date(), 30)}
-                    className="rounded-md border"
-                    locale={ptBR}
-                  />
-                </div>
-
-                {selectedDate && (
-                  <div className="space-y-2">
-                    <Label>Horário Disponível</Label>
-                    {loadingDisponibilidade ? (
-                      <div className="flex items-center justify-center py-8">
-                        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                        {disponibilidade
-                          .filter(slot => slot.disponivel)
-                          .map((slot) => {
-                            const time = new Date(slot.data_hora).toLocaleTimeString('pt-BR', {
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })
-                            return (
-                              <Button
-                                key={slot.data_hora}
-                                variant={selectedTime === time ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => setSelectedTime(time)}
-                              >
-                                {time}
-                              </Button>
-                            )
-                          })}
-                      </div>
-                    )}
-                    {disponibilidade.length === 0 && !loadingDisponibilidade && (
-                      <p className="text-center text-muted-foreground py-4">
-                        Nenhum horário disponível para esta data
-                      </p>
-                    )}
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-base font-medium">Selecione a Data</Label>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Escolha um dia para ver os horários disponíveis
+                    </p>
+                    <CalendarioPersonalizado
+                      selected={selectedDate}
+                      onSelect={handleDateSelect}
+                      disabled={(date) => date < startOfDay(new Date()) || date > addDays(new Date(), 30)}
+                      className="mx-auto max-w-sm"
+                    />
                   </div>
-                )}
+
+                  {selectedDate && (
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-base font-medium">Horários Disponíveis</Label>
+                        <p className="text-sm text-muted-foreground">
+                          {format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                        </p>
+                      </div>
+                      <SeletorHorarios
+                        horarios={disponibilidade}
+                        selecionado={selectedTime}
+                        onSelecionar={setSelectedTime}
+                        loading={loadingDisponibilidade}
+                      />
+                    </div>
+                  )}
+                </div>
 
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => setStep(1)} className="w-full">
@@ -342,10 +320,12 @@ export default function AgendarPublico() {
 
           {/* Step 3: Dados do Cliente */}
           {step === 3 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Seus Dados</CardTitle>
-                <CardDescription>Preencha seus dados para confirmar o agendamento</CardDescription>
+            <Card className="animate-fade-in">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl">Confirmação do Agendamento</CardTitle>
+                <CardDescription className="text-base">
+                  Preencha seus dados para finalizar o agendamento
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Resumo do agendamento */}

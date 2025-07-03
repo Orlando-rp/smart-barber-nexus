@@ -58,6 +58,13 @@ All colors MUST be HSL.
     --barber-dark: 0 0% 9%;
     --barber-gray: 220 9% 46%;
     --barber-light-gray: 210 40% 96%;
+    
+    /* Calendar specific tokens */
+    --calendar-bg: 0 0% 100%;
+    --calendar-border: 220 13% 91%;
+    --calendar-hover: 210 40% 98%;
+    --calendar-selected: 45 100% 50%;
+    --calendar-selected-text: 0 0% 9%;
   }
 
   .dark {
@@ -104,6 +111,13 @@ All colors MUST be HSL.
     --barber-dark: 0 0% 4%;
     --barber-gray: 0 0% 65%;
     --barber-light-gray: 0 0% 15%;
+    
+    /* Calendar specific tokens for dark */
+    --calendar-bg: 0 0% 9%;
+    --calendar-border: 0 0% 20%;
+    --calendar-hover: 0 0% 15%;
+    --calendar-selected: 45 100% 50%;
+    --calendar-selected-text: 0 0% 9%;
   }
 }
 
@@ -114,5 +128,22 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
