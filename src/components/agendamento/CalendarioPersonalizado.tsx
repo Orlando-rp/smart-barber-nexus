@@ -72,12 +72,12 @@ export function CalendarioPersonalizado({
   const calendarDays = eachDayOfInterval({ start: startCalendar, end: endCalendar })
 
   return (
-    <div className={cn("bg-card rounded-lg border p-4", className)}>
-      {/* Header com controles de navegação */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
+    <div className={cn("bg-card rounded-lg border p-3 sm:p-4", className)}>
+      {/* Header com controles de navegação - Otimizado para mobile */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <div className="flex items-center gap-2 justify-center sm:justify-start">
           <Select value={currentMonth.getMonth().toString()} onValueChange={handleMonthChange}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-28 sm:w-32 h-10">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -90,7 +90,7 @@ export function CalendarioPersonalizado({
           </Select>
 
           <Select value={currentMonth.getFullYear().toString()} onValueChange={handleYearChange}>
-            <SelectTrigger className="w-20">
+            <SelectTrigger className="w-16 sm:w-20 h-10">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -103,12 +103,12 @@ export function CalendarioPersonalizado({
           </Select>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center justify-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={handlePreviousMonth}
-            className="h-8 w-8 p-0"
+            className="h-10 w-10 p-0 touch-manipulation"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -116,23 +116,27 @@ export function CalendarioPersonalizado({
             variant="outline"
             size="sm"
             onClick={handleNextMonth}
-            className="h-8 w-8 p-0"
+            className="h-10 w-10 p-0 touch-manipulation"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      {/* Dias da semana */}
+      {/* Dias da semana - Mobile otimizado */}
       <div className="grid grid-cols-7 gap-1 mb-2">
-        {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day) => (
-          <div key={day} className="h-9 flex items-center justify-center text-sm font-medium text-muted-foreground">
-            {day}
-          </div>
-        ))}
+        {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, index) => {
+          const fullDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+          return (
+            <div key={day} className="h-10 flex items-center justify-center text-xs sm:text-sm font-medium text-muted-foreground">
+              <span className="hidden sm:inline">{fullDays[index]}</span>
+              <span className="sm:hidden">{day}</span>
+            </div>
+          )
+        })}
       </div>
 
-      {/* Grade de dias */}
+      {/* Grade de dias - Botões maiores para mobile */}
       <div className="grid grid-cols-7 gap-1">
         {calendarDays.map((day) => {
           const isCurrentMonth = isSameMonth(day, currentMonth)
@@ -145,7 +149,7 @@ export function CalendarioPersonalizado({
               key={day.toISOString()}
               variant="ghost"
               className={cn(
-                "h-9 w-9 p-0 text-sm transition-colors",
+                "h-10 w-full p-0 text-sm transition-colors touch-manipulation min-h-[2.5rem]",
                 !isCurrentMonth && "text-muted-foreground/50",
                 isSelectedDay && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
                 isTodayDay && !isSelectedDay && "bg-accent text-accent-foreground",

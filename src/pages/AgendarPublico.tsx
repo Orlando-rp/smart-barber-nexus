@@ -101,26 +101,26 @@ export default function AgendarPublico() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5">
-      {/* Header */}
+      {/* Header - Mobile otimizado */}
       <div className="bg-background/80 backdrop-blur-sm border-b sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <div className="flex items-center gap-3">
             {unidade.logo_url && (
-              <img src={unidade.logo_url} alt={unidade.nome} className="w-12 h-12 rounded-lg object-cover" />
+              <img src={unidade.logo_url} alt={unidade.nome} className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover" />
             )}
-            <div>
-              <h1 className="text-2xl font-bold">{unidade.nome}</h1>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg sm:text-2xl font-bold truncate">{unidade.nome}</h1>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                 {unidade.endereco && (
                   <div className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    {unidade.endereco}
+                    <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <span className="truncate">{unidade.endereco}</span>
                   </div>
                 )}
                 {unidade.telefone && (
                   <div className="flex items-center gap-1">
-                    <Phone className="w-4 h-4" />
-                    {unidade.telefone}
+                    <Phone className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <span>{unidade.telefone}</span>
                   </div>
                 )}
               </div>
@@ -129,7 +129,7 @@ export default function AgendarPublico() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <div className="max-w-2xl mx-auto">
           <ProgressSteps currentStep={step} />
 

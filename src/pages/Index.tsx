@@ -6,6 +6,7 @@ import { PWAInstaller } from "@/components/dashboard/PWAInstaller"
 import { QuickActions } from "@/components/dashboard/QuickActions"
 import { RecentAppointments } from "@/components/dashboard/RecentAppointments"
 import { NotificationTemplates } from "@/components/dashboard/NotificationTemplates"
+import { PublicSchedulingInfo } from "@/components/dashboard/PublicSchedulingInfo"
 import { useAuth } from "@/contexts/AuthContext"
 import { useDashboardData } from "@/hooks/useDashboardData"
 
@@ -58,9 +59,12 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="grid gap-6 md:grid-cols-2">
-          <RecentAppointments />
+        {/* Recent Activity & Public Scheduling */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-6">
+            <RecentAppointments />
+            <PublicSchedulingInfo />
+          </div>
           <div>
             <SetupFlow />
           </div>

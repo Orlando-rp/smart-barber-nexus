@@ -28,9 +28,9 @@ export function SeletorHorarios({
           <Clock className="h-4 w-4 animate-spin" />
           <span className="text-sm">Verificando disponibilidade...</span>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
           {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="h-12 bg-muted animate-pulse rounded-md"></div>
+            <div key={i} className="h-14 sm:h-12 bg-muted animate-pulse rounded-md"></div>
           ))}
         </div>
       </div>
@@ -81,16 +81,15 @@ export function SeletorHorarios({
         size="sm"
         onClick={() => onSelecionar(horario)}
         className={cn(
-          "relative h-12 transition-all duration-200",
-          isSelected && "ring-2 ring-primary/20"
+          "relative h-14 sm:h-12 transition-all duration-200 touch-manipulation",
+          "active:scale-95 flex flex-col items-center justify-center gap-1",
+          isSelected && "ring-2 ring-primary/20 shadow-lg"
         )}
       >
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-sm font-medium">{horario}</span>
-          {isSelected && (
-            <CheckCircle className="h-3 w-3 opacity-70" />
-          )}
-        </div>
+        <span className="text-sm sm:text-xs font-medium leading-tight">{horario}</span>
+        {isSelected && (
+          <CheckCircle className="h-3 w-3 opacity-70" />
+        )}
       </Button>
     )
   }
@@ -118,7 +117,7 @@ export function SeletorHorarios({
           <h4 className="text-sm font-medium text-muted-foreground">
             Manhã ({manhãHorarios.length} horário{manhãHorarios.length !== 1 ? 's' : ''})
           </h4>
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
             {manhãHorarios.map((slot) => (
               <HorarioButton key={slot.data_hora} slot={slot} />
             ))}
@@ -132,7 +131,7 @@ export function SeletorHorarios({
           <h4 className="text-sm font-medium text-muted-foreground">
             Tarde ({tardeHorarios.length} horário{tardeHorarios.length !== 1 ? 's' : ''})
           </h4>
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
             {tardeHorarios.map((slot) => (
               <HorarioButton key={slot.data_hora} slot={slot} />
             ))}

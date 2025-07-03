@@ -34,40 +34,41 @@ export function ServiceCard({
   return (
     <Card
       className={cn(
-        "p-4 cursor-pointer transition-all duration-200 hover:shadow-md",
+        "p-4 sm:p-4 cursor-pointer transition-all duration-200 hover:shadow-md touch-manipulation",
+        "min-h-[100px] sm:min-h-auto active:scale-[0.98]",
         selected 
           ? "ring-2 ring-primary bg-primary/5 border-primary" 
           : "hover:border-primary/50"
       )}
       onClick={onClick}
     >
-      <div className="flex justify-between items-start">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
         <div className="space-y-2 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-foreground">{nome}</h3>
+            <h3 className="font-semibold text-foreground text-base sm:text-base">{nome}</h3>
             {selected && (
               <div className="w-2 h-2 bg-primary rounded-full"></div>
             )}
           </div>
           
           {descricao && (
-            <p className="text-sm text-muted-foreground">{descricao}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{descricao}</p>
           )}
           
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <div className="flex items-center gap-1 text-muted-foreground">
               <Clock className="w-4 h-4" />
-              <span>{duracao_minutos}min</span>
+              <span className="text-sm">{duracao_minutos}min</span>
             </div>
             <div className="flex items-center gap-1 text-foreground font-medium">
               <DollarSign className="w-4 h-4" />
-              <span>{formatCurrency(preco)}</span>
+              <span className="text-base">{formatCurrency(preco)}</span>
             </div>
           </div>
         </div>
         
         {categoria && (
-          <Badge variant="secondary" className="ml-2">
+          <Badge variant="secondary" className="self-start sm:ml-2">
             {categoria}
           </Badge>
         )}
