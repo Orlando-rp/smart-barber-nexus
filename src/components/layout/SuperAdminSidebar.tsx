@@ -26,22 +26,22 @@ import {
 const menuItems = [
   {
     title: "Dashboard SaaS",
-    url: "/",
+    url: "/admin", // Corrigido
     icon: BarChart3,
   },
   {
     title: "Clientes SaaS",
-    url: "/admin/ClientesSaas", // corrigido
+    url: "/admin/clientes", // Corrigido
     icon: Building2,
   },
   {
     title: "Relatórios",
-    url: "/admin/RelatoriosAdmin", // corrigido
+    url: "/admin/relatorios", // Corrigido
     icon: FileText,
   },
   {
     title: "Sistema",
-    url: "/admin/SistemaConfiguracoes", // corrigido
+    url: "/admin/sistema", // Corrigido
     icon: Database,
   },
 ];
@@ -49,12 +49,12 @@ const menuItems = [
 const bottomMenuItems = [
   {
     title: "Usuários Admin",
-    url: "/admin/UsuariosAdmin", // corrigido
+    url: "/admin/usuarios", // Corrigido
     icon: Users,
   },
   {
     title: "Configurações",
-    url: "/admin/ConfiguracoesAdmin", // corrigido
+    url: "/admin/configuracoes", // Corrigido
     icon: Settings,
   },
 ];
