@@ -62,7 +62,7 @@ const App = () => (
             <Route path="/agendamento/:token" element={<GerenciarAgendamento />} />
 
             {/* Rotas do Super Admin com layout */}
-            <Route path="/admin" element={
+            <Route path="/admin/*" element={
               <ProtectedRoute requireSuperAdmin={true}>
                 <SuperAdminLayout />
               </ProtectedRoute>
