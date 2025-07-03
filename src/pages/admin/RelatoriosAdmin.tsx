@@ -1,4 +1,5 @@
-// src/pages/admin/RelatoriosAdmin.tsx
-const ClientesSaas = () => <div>Relatórios</div>
-export default RelatoriosAdmin
+const RelatoriosAdmin = () => {
+  return <div>Relatórios Admin</div>;
+};
 
+export default RelatoriosAdmin;
