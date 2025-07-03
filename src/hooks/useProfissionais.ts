@@ -9,6 +9,7 @@ interface Profissional {
   email?: string
   telefone?: string
   especialidades?: string[]
+  servicos?: string[]
   comissao_percentual?: number
   ativo: boolean
   horario_trabalho?: any

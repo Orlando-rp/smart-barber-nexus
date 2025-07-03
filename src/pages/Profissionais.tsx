@@ -220,6 +220,11 @@ const Profissionais = () => {
                         <TableCell>
                           <div className="text-sm">
                             {formatEspecialidades(profissional.especialidades)}
+                            {profissional.servicos && profissional.servicos.length > 0 && (
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Serviços: {profissional.servicos.length}
+                              </div>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>

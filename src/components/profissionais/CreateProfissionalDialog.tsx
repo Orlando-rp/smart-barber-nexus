@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { useProfissionais } from "@/hooks/useProfissionais"
+import { useServicos } from "@/hooks/useServicos"
 import { useAuth } from "@/contexts/AuthContext"
 import { supabase } from "@/integrations/supabase/client"
 
@@ -39,6 +40,7 @@ const profissionalSchema = z.object({
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   telefone: z.string().optional(),
   especialidades: z.array(z.string()).optional(),
+  servicos: z.array(z.string()).optional(),
   comissao_percentual: z.number().min(0).max(100).optional(),
   ativo: z.boolean().default(true),
 })
@@ -73,7 +75,9 @@ export function CreateProfissionalDialog({
 }: CreateProfissionalDialogProps) {
   const [unidades, setUnidades] = useState<any[]>([])
   const [selectedEspecialidades, setSelectedEspecialidades] = useState<string[]>([])
+  const [selectedServicos, setSelectedServicos] = useState<string[]>([])
   const { createProfissional, updateProfissional } = useProfissionais()
+  const { servicos } = useServicos()
   const { user } = useAuth()
   const [loading, setLoading] = useState(false)
 
@@ -84,6 +88,7 @@ export function CreateProfissionalDialog({
       email: "",
       telefone: "",
       especialidades: [],
+      servicos: [],
       comissao_percentual: 0,
       ativo: true,
     },
@@ -111,20 +116,24 @@ export function CreateProfissionalDialog({
         email: profissional.email || "",
         telefone: profissional.telefone || "",
         especialidades: profissional.especialidades || [],
+        servicos: profissional.servicos || [],
         comissao_percentual: profissional.comissao_percentual || 0,
         ativo: profissional.ativo,
       })
       setSelectedEspecialidades(profissional.especialidades || [])
+      setSelectedServicos(profissional.servicos || [])
     } else {
       form.reset({
         nome: "",
         email: "",
         telefone: "",
         especialidades: [],
+        servicos: [],
         comissao_percentual: 0,
         ativo: true,
       })
       setSelectedEspecialidades([])
+      setSelectedServicos([])
     }
   }, [profissional, form])
 
@@ -135,6 +144,15 @@ export function CreateProfissionalDialog({
     
     setSelectedEspecialidades(newEspecialidades)
     form.setValue('especialidades', newEspecialidades)
+  }
+
+  const handleServicoToggle = (servicoId: string) => {
+    const newServicos = selectedServicos.includes(servicoId)
+      ? selectedServicos.filter(s => s !== servicoId)
+      : [...selectedServicos, servicoId]
+    
+    setSelectedServicos(newServicos)
+    form.setValue('servicos', newServicos)
   }
 
   const onSubmit = async (data: ProfissionalFormData) => {
@@ -151,6 +169,7 @@ export function CreateProfissionalDialog({
         email: data.email || null,
         telefone: data.telefone || null,
         especialidades: selectedEspecialidades,
+        servicos: selectedServicos,
         comissao_percentual: data.comissao_percentual || 0,
         ativo: data.ativo,
         unidade_id: unidades[0].id, // Por simplicidade, usar a primeira unidade
@@ -278,6 +297,35 @@ export function CreateProfissionalDialog({
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Serviços que pode realizar</Label>
+              {servicos.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Nenhum serviço cadastrado. Cadastre serviços primeiro na página de Serviços.
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
+                  {servicos.map((servico) => (
+                    <div key={servico.id} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`servico-${servico.id}`}
+                        checked={selectedServicos.includes(servico.id)}
+                        onChange={() => handleServicoToggle(servico.id)}
+                        className="w-4 h-4"
+                      />
+                      <Label 
+                        htmlFor={`servico-${servico.id}`} 
+                        className="text-sm font-normal cursor-pointer"
+                      >
+                        {servico.nome} - R$ {servico.preco.toFixed(2)}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <FormField
