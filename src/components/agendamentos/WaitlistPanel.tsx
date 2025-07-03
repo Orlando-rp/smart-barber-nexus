@@ -184,7 +184,7 @@ export function WaitlistPanel() {
                   <div className="flex items-center gap-2 mb-1">
                     <User className="h-4 w-4" />
                     <span className="font-medium">{entry.cliente_nome}</span>
-                    <Badge variant={getPriorityColor(entry.prioridade)} size="sm">
+                    <Badge variant={getPriorityColor(entry.prioridade)}>
                       {entry.prioridade}
                     </Badge>
                   </div>
@@ -201,7 +201,7 @@ export function WaitlistPanel() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant={getStatusColor(entry.status)} size="sm">
+                  <Badge variant={getStatusColor(entry.status)}>
                     {entry.status}
                   </Badge>
                   {entry.status === 'aguardando' && (
