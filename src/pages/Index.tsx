@@ -1,8 +1,11 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { DashboardStats } from "@/components/dashboard/DashboardStats"
 import { SetupFlow } from "@/components/dashboard/SetupFlow"
+import { StatsCard } from "@/components/dashboard/StatsCard"
+import { PWAInstaller } from "@/components/dashboard/PWAInstaller"
 import { QuickActions } from "@/components/dashboard/QuickActions"
 import { RecentAppointments } from "@/components/dashboard/RecentAppointments"
+import { NotificationTemplates } from "@/components/dashboard/NotificationTemplates"
 import { useAuth } from "@/contexts/AuthContext"
 import { useDashboardData } from "@/hooks/useDashboardData"
 
@@ -46,12 +49,20 @@ const Index = () => {
         {/* Stats Grid */}
         <DashboardStats stats={stats} />
 
+        {/* PWA Installation */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <PWAInstaller />
+          <QuickActions />
+          <div className="md:col-span-2">
+            <NotificationTemplates />
+          </div>
+        </div>
+
         {/* Recent Activity */}
         <div className="grid gap-6 md:grid-cols-2">
           <RecentAppointments />
-          
-          <div className="space-y-4">
-            <QuickActions />
+          <div>
+            <SetupFlow />
           </div>
         </div>
       </div>

@@ -254,6 +254,79 @@ export type Database = {
           },
         ]
       }
+      fila_espera: {
+        Row: {
+          cliente_email: string | null
+          cliente_nome: string
+          cliente_telefone: string
+          created_at: string
+          data_preferida: string | null
+          horario_preferido: string | null
+          id: string
+          observacoes: string | null
+          prioridade: string
+          profissional_id: string | null
+          servico_id: string
+          status: string
+          unidade_id: string
+          updated_at: string
+        }
+        Insert: {
+          cliente_email?: string | null
+          cliente_nome: string
+          cliente_telefone: string
+          created_at?: string
+          data_preferida?: string | null
+          horario_preferido?: string | null
+          id?: string
+          observacoes?: string | null
+          prioridade?: string
+          profissional_id?: string | null
+          servico_id: string
+          status?: string
+          unidade_id: string
+          updated_at?: string
+        }
+        Update: {
+          cliente_email?: string | null
+          cliente_nome?: string
+          cliente_telefone?: string
+          created_at?: string
+          data_preferida?: string | null
+          horario_preferido?: string | null
+          id?: string
+          observacoes?: string | null
+          prioridade?: string
+          profissional_id?: string | null
+          servico_id?: string
+          status?: string
+          unidade_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fila_espera_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fila_espera_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fila_espera_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       logs_notificacoes: {
         Row: {
           agendamento_id: string
@@ -294,6 +367,66 @@ export type Database = {
             columns: ["agendamento_id"]
             isOneToOne: false
             referencedRelation: "agendamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      movimentacoes_financeiras: {
+        Row: {
+          agendamento_id: string | null
+          categoria: string
+          created_at: string
+          data_pagamento: string | null
+          data_vencimento: string
+          descricao: string
+          id: string
+          observacoes: string | null
+          status: string
+          tipo: string
+          unidade_id: string
+          valor: number
+        }
+        Insert: {
+          agendamento_id?: string | null
+          categoria: string
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento: string
+          descricao: string
+          id?: string
+          observacoes?: string | null
+          status?: string
+          tipo: string
+          unidade_id: string
+          valor: number
+        }
+        Update: {
+          agendamento_id?: string | null
+          categoria?: string
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento?: string
+          descricao?: string
+          id?: string
+          observacoes?: string | null
+          status?: string
+          tipo?: string
+          unidade_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movimentacoes_financeiras_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimentacoes_financeiras_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]
