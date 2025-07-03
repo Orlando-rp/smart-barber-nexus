@@ -210,13 +210,25 @@ const Auth = () => {
             })
         } else if (userType === "super_admin") {
           // Criar role de super_admin
-          await supabase
+          console.log("Criando role super_admin para:", data.user.id)
+          
+          const { error: roleError } = await supabase
             .from('user_roles')
             .insert({
               user_id: data.user.id,
               saas_client_id: null,
               role: 'super_admin'
             })
+          
+          if (roleError) {
+            console.error("Erro ao inserir role super_admin:", roleError)
+            toast({
+              variant: "destructive",
+              title: "Erro",
+              description: "Não foi possível atribuir o perfil de super admin."
+            })
+            return
+          }
         }
 
         toast({
