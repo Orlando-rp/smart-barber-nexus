@@ -20,10 +20,10 @@ import Financeiro from "./pages/Financeiro";
 import Profissionais from "./pages/Profissionais";
 import Notificacoes from "./pages/Notificacoes";
 import Configuracoes from "./pages/Configuracoes";
-import ClientesSaas from "./pages/admin/ClientesSaas";
-import RelatoriosAdmin from "./pages/admin/RelatoriosAdmin";
-import SistemaConfiguracoes from "./pages/admin/SistemaConfiguracoes";
-import UsuariosAdmin from "./pages/admin/UsuariosAdmin";
+import ClientesSaas from "./pages/admin/ClientesSaas"
+import RelatoriosAdmin from "./pages/admin/RelatoriosAdmin"
+import SistemaConfiguracoes from "./pages/admin/SistemaConfiguracoes"
+import UsuariosAdmin from "./pages/admin/UsuariosAdmin"
 
 const queryClient = new QueryClient();
 
