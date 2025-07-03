@@ -31,17 +31,17 @@ const menuItems = [
   },
   {
     title: "Clientes SaaS",
-    url: "/admin/ClientesSaas.tsx", // corrigido
+    url: "/ClientesSaas", // corrigido
     icon: Building2,
   },
   {
     title: "Relatórios",
-    url: "/admin/RelatoriosAdmin", // corrigido
+    url: "/RelatoriosAdmin", // corrigido
     icon: FileText,
   },
   {
     title: "Sistema",
-    url: "/admin/SistemaConfiguracoes", // corrigido
+    url: "/SistemaConfiguracoes", // corrigido
     icon: Database,
   },
 ];
