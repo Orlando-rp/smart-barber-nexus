@@ -59,7 +59,8 @@ export const useAgendamentos = () => {
       const unidadeIds = unidades?.map(u => u.id) || []
 
       if (unidadeIds.length === 0) {
-        setAgendamentos([])
+        // Se não há unidades, criar dados de demonstração
+        await createDemoData()
         return
       }
 
@@ -87,6 +88,115 @@ export const useAgendamentos = () => {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const createDemoData = async () => {
+    try {
+      // Criar unidade
+      const { data: unidade, error: unidadeError } = await supabase
+        .from('unidades')
+        .insert([{
+          nome: 'Barbearia Demo',
+          user_id: user.id,
+          endereco: 'Rua das Flores, 123 - Centro',
+          telefone: '(11) 98765-4321'
+        }])
+        .select()
+        .single()
+
+      if (unidadeError) throw unidadeError
+
+      // Criar profissionais
+      const { error: profissionaisError } = await supabase
+        .from('profissionais')
+        .insert([
+          {
+            nome: 'João Silva',
+            telefone: '(11) 99999-1111',
+            email: 'joao@demo.com',
+            unidade_id: unidade.id,
+            especialidades: ['Corte Masculino', 'Barba', 'Bigode']
+          },
+          {
+            nome: 'Maria Santos',
+            telefone: '(11) 99999-2222',
+            email: 'maria@demo.com',
+            unidade_id: unidade.id,
+            especialidades: ['Corte Feminino', 'Escova', 'Tratamentos']
+          }
+        ])
+
+      if (profissionaisError) throw profissionaisError
+
+      // Criar serviços
+      const { error: servicosError } = await supabase
+        .from('servicos')
+        .insert([
+          {
+            nome: 'Corte Masculino',
+            preco: 35.00,
+            duracao_minutos: 30,
+            categoria: 'corte',
+            descricao: 'Corte tradicional masculino com acabamento',
+            unidade_id: unidade.id
+          },
+          {
+            nome: 'Barba + Bigode',
+            preco: 25.00,
+            duracao_minutos: 20,
+            categoria: 'barba',
+            descricao: 'Aparar barba e bigode com navalha',
+            unidade_id: unidade.id
+          },
+          {
+            nome: 'Corte + Barba',
+            preco: 50.00,
+            duracao_minutos: 45,
+            categoria: 'combo',
+            descricao: 'Pacote completo: corte masculino + barba',
+            unidade_id: unidade.id
+          }
+        ])
+
+      if (servicosError) throw servicosError
+
+      // Criar clientes
+      const { error: clientesError } = await supabase
+        .from('clientes')
+        .insert([
+          {
+            nome: 'Carlos Oliveira',
+            telefone: '(11) 97777-1111',
+            email: 'carlos@email.com',
+            unidade_id: unidade.id,
+            total_visitas: 5
+          },
+          {
+            nome: 'Pedro Costa',
+            telefone: '(11) 97777-2222',
+            email: 'pedro@email.com',
+            unidade_id: unidade.id,
+            total_visitas: 3
+          }
+        ])
+
+      if (clientesError) throw clientesError
+
+      toast({
+        title: "Dados criados!",
+        description: "Dados de demonstração foram criados com sucesso.",
+      })
+
+      // Recarregar dados
+      fetchAgendamentos()
+    } catch (error) {
+      console.error('Erro ao criar dados de demonstração:', error)
+      toast({
+        title: "Erro",
+        description: "Não foi possível criar os dados de demonstração.",
+        variant: "destructive",
+      })
     }
   }
 
