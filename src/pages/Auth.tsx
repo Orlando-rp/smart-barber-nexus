@@ -92,7 +92,7 @@ const Auth = () => {
         });
       
         if (role === "super_admin") {
-          navigate("/");
+          navigate("/admin");
         } else {
           navigate("/");
         }
