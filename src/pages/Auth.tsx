@@ -73,7 +73,7 @@ const Auth = () => {
           title: "Login realizado!",
           description: "Bem-vindo ao BarberSmart."
         })
-        window.location.href = '/'
+        // Navigation will be handled by ProtectedRoute after user data loads
       }
     } catch (error: any) {
       toast({

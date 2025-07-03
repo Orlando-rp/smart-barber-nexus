@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children, requireSuperAdmin = false }: ProtectedRouteProps) => {
-  const { user, loading, isSuperAdmin, userRoles } = useAuth()
+  const { user, loading, isSuperAdmin, userRoles, userDataLoaded, getRedirectPath } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -18,9 +18,12 @@ export const ProtectedRoute = ({ children, requireSuperAdmin = false }: Protecte
       return
     }
 
-    if (!loading && user && userRoles.length > 0) {
-      // Redirecionamento baseado em roles após login
-      if (isSuperAdmin && location.pathname === '/') {
+    if (!loading && user && userDataLoaded) {
+      // Redirecionamento inteligente baseado em roles após login
+      const correctPath = getRedirectPath()
+      
+      // Se está na página raiz e deveria estar na página de admin
+      if (location.pathname === '/' && correctPath === '/admin') {
         navigate('/admin')
         return
       }
@@ -31,7 +34,7 @@ export const ProtectedRoute = ({ children, requireSuperAdmin = false }: Protecte
         return
       }
     }
-  }, [user, loading, navigate, isSuperAdmin, userRoles, location.pathname, requireSuperAdmin])
+  }, [user, loading, navigate, isSuperAdmin, userRoles, userDataLoaded, location.pathname, requireSuperAdmin, getRedirectPath])
 
   if (loading) {
     return (

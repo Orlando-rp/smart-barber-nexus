@@ -24,10 +24,12 @@ interface AuthContextType {
   userProfile: UserProfile | null
   userRoles: UserRole[]
   loading: boolean
+  userDataLoaded: boolean
   isSuperAdmin: boolean
   isClientOwner: boolean
   signOut: () => Promise<void>
   refetchUserData: () => Promise<void>
+  getRedirectPath: () => string
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -50,12 +52,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [userRoles, setUserRoles] = useState<UserRole[]>([])
   const [loading, setLoading] = useState(true)
+  const [userDataLoaded, setUserDataLoaded] = useState(false)
 
   const isSuperAdmin = userRoles.some(role => role.role === 'super_admin')
   const isClientOwner = userRoles.some(role => role.role === 'client_owner')
 
+  const getRedirectPath = () => {
+    if (isSuperAdmin) return '/admin'
+    return '/'
+  }
+
   const fetchUserData = async (userId: string) => {
     try {
+      setUserDataLoaded(false)
+      
       // Buscar perfil do usuário
       const { data: profile } = await supabase
         .from('user_profiles')
@@ -76,8 +86,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (roles) {
         setUserRoles(roles)
       }
+      
+      setUserDataLoaded(true)
     } catch (error) {
       console.error('Error fetching user data:', error)
+      setUserDataLoaded(true)
     }
   }
 
@@ -155,10 +168,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     userProfile,
     userRoles,
     loading,
+    userDataLoaded,
     isSuperAdmin,
     isClientOwner,
     signOut,
     refetchUserData,
+    getRedirectPath,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
