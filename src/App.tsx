@@ -14,6 +14,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import AgendarPublico from "./pages/AgendarPublico";
 import GerenciarAgendamento from "./pages/GerenciarAgendamento";
+import Analytics from "./pages/Analytics";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,11 @@ const App = () => (
             <Route path="/admin" element={
               <ProtectedRoute requireSuperAdmin={true}>
                 <SuperAdmin />
+              </ProtectedRoute>
+            } />
+            <Route path="/analytics" element={
+              <ProtectedRoute>
+                <Analytics />
               </ProtectedRoute>
             } />
             <Route path="/agendar/:slug" element={<AgendarPublico />} />

@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
+import { CalendarView } from "@/components/agendamentos/CalendarView"
+import { AgendamentosFilters } from "@/components/agendamentos/AgendamentosFilters"
+import { NotificationTemplates } from "@/components/dashboard/NotificationTemplates"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -9,12 +12,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Calendar, Clock, Plus, Filter, Edit, Trash2 } from "lucide-react"
-import { format } from "date-fns"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Calendar, Clock, Plus, Edit, Trash2, Send, MessageCircle, List } from "lucide-react"
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { supabase } from "@/integrations/supabase/client"
 import { useAuth } from "@/contexts/AuthContext"
 import { useToast } from "@/hooks/use-toast"
+import { useNotificationTemplates } from "@/hooks/useNotificationTemplates"
 
 interface Agendamento {
   id: string
@@ -26,6 +31,7 @@ interface Agendamento {
   preco: number
   status: string
   observacoes?: string
+  cliente_nome?: string
   clientes: { nome: string }
   profissionais: { nome: string }
   servicos: { nome: string; preco: number }
@@ -60,14 +66,17 @@ const statusConfig = {
 const Agendamentos = () => {
   const { userProfile, isSuperAdmin } = useAuth()
   const { toast } = useToast()
+  const { sendNotification } = useNotificationTemplates()
+  
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([])
+  const [agendamentosFiltrados, setAgendamentosFiltrados] = useState<Agendamento[]>([])
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [profissionais, setProfissionais] = useState<Profissional[]>([])
   const [servicos, setServicos] = useState<Servico[]>([])
   const [unidades, setUnidades] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState(new Date())
-  const [filterStatus, setFilterStatus] = useState<string>("todos")
+  const [activeTab, setActiveTab] = useState("calendar")
   const [newAgendamentoOpen, setNewAgendamentoOpen] = useState(false)
   const [editingAgendamento, setEditingAgendamento] = useState<Agendamento | null>(null)
   const [formData, setFormData] = useState({
@@ -82,6 +91,26 @@ const Agendamentos = () => {
   useEffect(() => {
     if (userProfile) {
       fetchData()
+      
+      // Real-time subscription
+      const channel = supabase
+        .channel('agendamentos-realtime')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'agendamentos'
+          },
+          () => {
+            fetchData()
+          }
+        )
+        .subscribe()
+
+      return () => {
+        supabase.removeChannel(channel)
+      }
     }
   }, [userProfile])
 
@@ -118,38 +147,26 @@ const Agendamentos = () => {
         .order('data_hora', { ascending: true })
 
       if (agendamentosError) throw agendamentosError
-      setAgendamentos(agendamentosData || [])
+      
+      const processedAgendamentos = (agendamentosData || []).map(apt => ({
+        ...apt,
+        cliente_nome: apt.cliente_nome || apt.clientes?.nome
+      }))
+      
+      setAgendamentos(processedAgendamentos)
+      setAgendamentosFiltrados(processedAgendamentos)
 
-      // Buscar clientes
-      const { data: clientesData, error: clientesError } = await supabase
-        .from('clientes')
-        .select('id, nome')
-        .in('unidade_id', unidadeIds)
+      // Buscar outros dados
+      const [clientesRes, profissionaisRes, servicosRes] = await Promise.all([
+        supabase.from('clientes').select('id, nome').in('unidade_id', unidadeIds),
+        supabase.from('profissionais').select('id, nome').in('unidade_id', unidadeIds).eq('ativo', true),
+        supabase.from('servicos').select('id, nome, preco, duracao_minutos').in('unidade_id', unidadeIds).eq('ativo', true)
+      ])
 
-      if (clientesError) throw clientesError
-      setClientes(clientesData || [])
+      setClientes(clientesRes.data || [])
+      setProfissionais(profissionaisRes.data || [])
+      setServicos(servicosRes.data || [])
 
-      // Buscar profissionais
-      const { data: profissionaisData, error: profissionaisError } = await supabase
-        .from('profissionais')
-        .select('id, nome')
-        .in('unidade_id', unidadeIds)
-        .eq('ativo', true)
-
-      if (profissionaisError) throw profissionaisError
-      setProfissionais(profissionaisData || [])
-
-      // Buscar serviços
-      const { data: servicosData, error: servicosError } = await supabase
-        .from('servicos')
-        .select('id, nome, preco, duracao_minutos')
-        .in('unidade_id', unidadeIds)
-        .eq('ativo', true)
-
-      if (servicosError) throw servicosError
-      setServicos(servicosData || [])
-
-      // Definir unidade padrão no form
       if (unidadesData.length > 0 && !formData.unidade_id) {
         setFormData(prev => ({ ...prev, unidade_id: unidadesData[0].id }))
       }
@@ -166,12 +183,79 @@ const Agendamentos = () => {
     }
   }
 
+  const handleFiltersChange = (filters: any) => {
+    let filtered = [...agendamentos]
+
+    // Filtro por busca (nome do cliente)
+    if (filters.search) {
+      filtered = filtered.filter(apt => 
+        (apt.cliente_nome || apt.clientes?.nome || '').toLowerCase().includes(filters.search.toLowerCase())
+      )
+    }
+
+    // Filtro por status
+    if (filters.status !== 'todos') {
+      filtered = filtered.filter(apt => apt.status === filters.status)
+    }
+
+    // Filtro por profissional
+    if (filters.profissional !== 'todos') {
+      filtered = filtered.filter(apt => apt.profissional_id === filters.profissional)
+    }
+
+    // Filtro por serviço
+    if (filters.servico !== 'todos') {
+      filtered = filtered.filter(apt => apt.servico_id === filters.servico)
+    }
+
+    // Filtro por período
+    const now = new Date()
+    switch (filters.periodo) {
+      case 'hoje':
+        const today = startOfDay(now)
+        const endToday = endOfDay(now)
+        filtered = filtered.filter(apt => {
+          const aptDate = new Date(apt.data_hora)
+          return aptDate >= today && aptDate <= endToday
+        })
+        break
+      case 'amanha':
+        const tomorrow = new Date(now)
+        tomorrow.setDate(tomorrow.getDate() + 1)
+        const startTomorrow = startOfDay(tomorrow)
+        const endTomorrow = endOfDay(tomorrow)
+        filtered = filtered.filter(apt => {
+          const aptDate = new Date(apt.data_hora)
+          return aptDate >= startTomorrow && aptDate <= endTomorrow
+        })
+        break
+      case 'esta_semana':
+        const weekStart = startOfWeek(now, { weekStartsOn: 0 })
+        const weekEnd = endOfWeek(now, { weekStartsOn: 0 })
+        filtered = filtered.filter(apt => {
+          const aptDate = new Date(apt.data_hora)
+          return aptDate >= weekStart && aptDate <= weekEnd
+        })
+        break
+      case 'este_mes':
+        const monthStart = startOfMonth(now)
+        const monthEnd = endOfMonth(now)
+        filtered = filtered.filter(apt => {
+          const aptDate = new Date(apt.data_hora)
+          return aptDate >= monthStart && aptDate <= monthEnd
+        })
+        break
+    }
+
+    setAgendamentosFiltrados(filtered)
+  }
+
   const handleCreateAgendamento = async () => {
     try {
       const servicoSelecionado = servicos.find(s => s.id === formData.servico_id)
       if (!servicoSelecionado) return
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('agendamentos')
         .insert([{
           ...formData,
@@ -179,8 +263,14 @@ const Agendamentos = () => {
           preco: servicoSelecionado.preco,
           status: 'pendente'
         }])
+        .select()
 
       if (error) throw error
+
+      // Send notification
+      if (data && data[0]) {
+        await sendNotification(data[0].id, 'confirmacao')
+      }
 
       toast({
         title: "Agendamento criado!",
@@ -215,6 +305,21 @@ const Agendamentos = () => {
 
       if (error) throw error
 
+      // Send notification based on status
+      let notificationType = ''
+      switch (novoStatus) {
+        case 'confirmado':
+          notificationType = 'confirmacao'
+          break
+        case 'cancelado':
+          notificationType = 'cancelamento'
+          break
+      }
+
+      if (notificationType) {
+        await sendNotification(agendamentoId, notificationType)
+      }
+
       toast({
         title: "Status atualizado!",
         description: "Status do agendamento atualizado com sucesso."
@@ -243,11 +348,6 @@ const Agendamentos = () => {
     )
   }
 
-  const agendamentosFiltrados = agendamentos.filter(agendamento => {
-    if (filterStatus === "todos") return true
-    return agendamento.status === filterStatus
-  })
-
   const totalAgendamentos = agendamentos.length
   const agendamentosConfirmados = agendamentos.filter(a => a.status === "confirmado").length
   const agendamentosPendentes = agendamentos.filter(a => a.status === "pendente").length
@@ -263,7 +363,7 @@ const Agendamentos = () => {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Agendamentos</h1>
             <p className="text-muted-foreground">
-              Gerencie os agendamentos de hoje - {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
+              Gerencie seus agendamentos de forma eficiente
             </p>
           </div>
           
@@ -369,7 +469,7 @@ const Agendamentos = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total do Dia
+                Total
               </CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -408,7 +508,7 @@ const Agendamentos = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Receita do Dia
+                Receita
               </CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -421,103 +521,117 @@ const Agendamentos = () => {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Lista de Agendamentos</CardTitle>
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="text-sm border rounded px-2 py-1"
-                >
-                  <option value="todos">Todos</option>
-                  <option value="pendente">Pendentes</option>
-                  <option value="confirmado">Confirmados</option>
-                  <option value="em_andamento">Em Andamento</option>
-                  <option value="concluido">Concluídos</option>
-                </select>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {agendamentosFiltrados.map((agendamento) => (
-                <div
-                  key={agendamento.id}
-                  className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src="" />
-                      <AvatarFallback className="text-sm">
-                        {agendamento.clientes?.nome?.split(' ').map(n => n[0]).join('') || 'CL'}
-                      </AvatarFallback>
-                    </Avatar>
-                    
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium">{agendamento.clientes?.nome || 'Cliente'}</p>
-                        <Badge 
-                          variant={statusConfig[agendamento.status as keyof typeof statusConfig]?.variant || "outline"}
-                          className={statusConfig[agendamento.status as keyof typeof statusConfig]?.color || ""}
-                        >
-                          {statusConfig[agendamento.status as keyof typeof statusConfig]?.label || agendamento.status}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {agendamento.servicos?.nome || 'Serviço'} • {agendamento.profissionais?.nome || 'Profissional'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {agendamento.duracao_minutos} min • R$ {agendamento.preco.toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
+        {/* Main Content Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="calendar" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Calendário
+            </TabsTrigger>
+            <TabsTrigger value="list" className="flex items-center gap-2">
+              <List className="h-4 w-4" />
+              Lista
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="flex items-center gap-2">
+              <MessageCircle className="h-4 w-4" />
+              Notificações
+            </TabsTrigger>
+          </TabsList>
 
-                  <div className="flex items-center gap-2">
-                    <div className="text-right mr-4">
-                      <p className="font-mono text-lg font-medium">
-                        {format(new Date(agendamento.data_hora), "HH:mm")}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(agendamento.data_hora), "dd/MM")}
-                      </p>
-                    </div>
-                    
-                    <Select 
-                      value={agendamento.status} 
-                      onValueChange={(value) => handleUpdateStatus(agendamento.id, value)}
+          <TabsContent value="calendar" className="space-y-4">
+            <CalendarView
+              agendamentos={agendamentos}
+              onDateSelect={setSelectedDate}
+              selectedDate={selectedDate}
+            />
+          </TabsContent>
+
+          <TabsContent value="list" className="space-y-4">
+            <AgendamentosFilters
+              onFiltersChange={handleFiltersChange}
+              profissionais={profissionais}
+              servicos={servicos}
+            />
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Lista de Agendamentos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {agendamentosFiltrados.map((agendamento) => (
+                    <div
+                      key={agendamento.id}
+                      className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                     >
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pendente">Pendente</SelectItem>
-                        <SelectItem value="confirmado">Confirmado</SelectItem>
-                        <SelectItem value="em_andamento">Em Andamento</SelectItem>
-                        <SelectItem value="concluido">Concluído</SelectItem>
-                        <SelectItem value="cancelado">Cancelado</SelectItem>
-                        <SelectItem value="faltou">Faltou</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                      <div className="flex items-center gap-4">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src="" />
+                          <AvatarFallback className="text-sm">
+                            {(agendamento.cliente_nome || agendamento.clientes?.nome || 'CL').split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{agendamento.cliente_nome || agendamento.clientes?.nome || 'Cliente'}</p>
+                            <Badge 
+                              variant={statusConfig[agendamento.status as keyof typeof statusConfig]?.variant || "outline"}
+                              className={statusConfig[agendamento.status as keyof typeof statusConfig]?.color || ""}
+                            >
+                              {statusConfig[agendamento.status as keyof typeof statusConfig]?.label || agendamento.status}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {agendamento.servicos?.nome} • {agendamento.profissionais?.nome}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {format(new Date(agendamento.data_hora), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} 
+                            • R$ {agendamento.preco.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Select
+                          value={agendamento.status}
+                          onValueChange={(value) => handleUpdateStatus(agendamento.id, value)}
+                        >
+                          <SelectTrigger className="w-[140px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pendente">Pendente</SelectItem>
+                            <SelectItem value="confirmado">Confirmado</SelectItem>
+                            <SelectItem value="em_andamento">Em Andamento</SelectItem>
+                            <SelectItem value="concluido">Concluído</SelectItem>
+                            <SelectItem value="cancelado">Cancelado</SelectItem>
+                            <SelectItem value="faltou">Faltou</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => sendNotification(agendamento.id, 'lembrete')}
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-              {agendamentosFiltrados.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Nenhum agendamento encontrado para o filtro selecionado.</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+          <TabsContent value="notifications">
+            <NotificationTemplates />
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
-  )
-}
+  );
+};
 
-export default Agendamentos
+export default Agendamentos;
