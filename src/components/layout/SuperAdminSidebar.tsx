@@ -26,17 +26,17 @@ import {
 const menuItems = [
   {
     title: "Dashboard SaaS",
-    url: "/admin",
+    url: "/",
     icon: BarChart3,
   },
   {
     title: "Clientes SaaS",
-    url: "/admin/ClientesSaas", // corrigido
+    url: "/admin/ClientesSaas.tsx", // corrigido
     icon: Building2,
   },
   {
     title: "Relatórios",
-    url: "/admin/RelatoriosSdmin", // corrigido
+    url: "/admin/RelatoriosAdmin", // corrigido
     icon: FileText,
   },
   {
