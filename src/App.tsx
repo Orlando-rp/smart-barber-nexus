@@ -29,7 +29,7 @@ import ClientesSaas from "./pages/admin/ClientesSaas";
 import RelatoriosAdmin from "./pages/admin/RelatoriosAdmin";
 import SistemaConfiguracoes from "./pages/admin/SistemaConfiguracoes";
 import UsuariosAdmin from "./pages/admin/UsuariosAdmin";
-import ConfiguracoesAdmin from "./pages/admin/ConfiguracoesAdmin"; // Opcional se existir
+import ConfiguracoesAdmin from "./pages/admin/ConfiguracoesAdmin";
 
 const queryClient = new QueryClient();
 
