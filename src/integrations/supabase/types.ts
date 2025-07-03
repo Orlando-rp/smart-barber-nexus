@@ -186,6 +186,54 @@ export type Database = {
           },
         ]
       }
+      saas_clients: {
+        Row: {
+          cnpj: string | null
+          created_at: string
+          data_vencimento: string | null
+          email: string
+          endereco: string | null
+          id: string
+          limite_unidades: number | null
+          limite_usuarios: number | null
+          nome: string
+          plano: string | null
+          status: string | null
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          cnpj?: string | null
+          created_at?: string
+          data_vencimento?: string | null
+          email: string
+          endereco?: string | null
+          id?: string
+          limite_unidades?: number | null
+          limite_usuarios?: number | null
+          nome: string
+          plano?: string | null
+          status?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cnpj?: string | null
+          created_at?: string
+          data_vencimento?: string | null
+          email?: string
+          endereco?: string | null
+          id?: string
+          limite_unidades?: number | null
+          limite_usuarios?: number | null
+          nome?: string
+          plano?: string | null
+          status?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       servicos: {
         Row: {
           ativo: boolean
@@ -242,6 +290,7 @@ export type Database = {
           id: string
           logo_url: string | null
           nome: string
+          saas_client_id: string | null
           telefone: string | null
           updated_at: string
           user_id: string
@@ -254,6 +303,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           nome: string
+          saas_client_id?: string | null
           telefone?: string | null
           updated_at?: string
           user_id: string
@@ -266,21 +316,120 @@ export type Database = {
           id?: string
           logo_url?: string | null
           nome?: string
+          saas_client_id?: string | null
           telefone?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "unidades_saas_client_id_fkey"
+            columns: ["saas_client_id"]
+            isOneToOne: false
+            referencedRelation: "saas_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_profiles: {
+        Row: {
+          ativo: boolean
+          avatar_url: string | null
+          created_at: string
+          email: string
+          id: string
+          nome: string
+          saas_client_id: string | null
+          telefone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          nome: string
+          saas_client_id?: string | null
+          telefone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          nome?: string
+          saas_client_id?: string | null
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_saas_client_id_fkey"
+            columns: ["saas_client_id"]
+            isOneToOne: false
+            referencedRelation: "saas_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          saas_client_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["user_role"]
+          saas_client_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          saas_client_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_saas_client_id_fkey"
+            columns: ["saas_client_id"]
+            isOneToOne: false
+            referencedRelation: "saas_clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_saas_client_id: {
+        Args: { _user_id: string }
+        Returns: string
+      }
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["user_role"]
+          _saas_client_id?: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "super_admin" | "client_owner" | "barber" | "receptionist"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -395,6 +544,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["super_admin", "client_owner", "barber", "receptionist"],
+    },
   },
 } as const

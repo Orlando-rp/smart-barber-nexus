@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Agendamentos from "./pages/Agendamentos";
 import Clientes from "./pages/Clientes";
 import Servicos from "./pages/Servicos";
+import SuperAdmin from "./pages/SuperAdmin";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -41,6 +42,11 @@ const App = () => (
             <Route path="/servicos" element={
               <ProtectedRoute>
                 <Servicos />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin" element={
+              <ProtectedRoute requireSuperAdmin={true}>
+                <SuperAdmin />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -1,20 +1,37 @@
 import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
+  requireSuperAdmin?: boolean
 }
 
-export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { user, loading } = useAuth()
+export const ProtectedRoute = ({ children, requireSuperAdmin = false }: ProtectedRouteProps) => {
+  const { user, loading, isSuperAdmin, userRoles } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth')
+      return
     }
-  }, [user, loading, navigate])
+
+    if (!loading && user && userRoles.length > 0) {
+      // Redirecionamento baseado em roles após login
+      if (isSuperAdmin && location.pathname === '/') {
+        navigate('/admin')
+        return
+      }
+      
+      // Verificar se usuário tem acesso à rota protegida para super admin
+      if (requireSuperAdmin && !isSuperAdmin) {
+        navigate('/')
+        return
+      }
+    }
+  }, [user, loading, navigate, isSuperAdmin, userRoles, location.pathname, requireSuperAdmin])
 
   if (loading) {
     return (

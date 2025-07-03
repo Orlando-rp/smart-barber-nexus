@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Scissors, Mail, Lock, User, Building2 } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Scissors, Mail, Lock, User, Building2, Crown } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { useNavigate } from "react-router-dom"
@@ -16,6 +17,7 @@ const Auth = () => {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [name, setName] = useState("")
   const [businessName, setBusinessName] = useState("")
+  const [userType, setUserType] = useState<"client" | "super_admin">("client")
   const { toast } = useToast()
   const navigate = useNavigate()
 
@@ -88,11 +90,23 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email || !password || !confirmPassword || !name || !businessName) {
+    
+    // Validação dos campos obrigatórios
+    if (!email || !password || !confirmPassword || !name) {
       toast({
         variant: "destructive",
         title: "Erro",
         description: "Por favor, preencha todos os campos."
+      })
+      return
+    }
+
+    // Validação específica para clientes
+    if (userType === "client" && !businessName) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Nome da barbearia é obrigatório para clientes."
       })
       return
     }
@@ -135,6 +149,7 @@ const Auth = () => {
           data: {
             name,
             business_name: businessName,
+            user_type: userType,
           }
         }
       })
@@ -142,6 +157,46 @@ const Auth = () => {
       if (error) throw error
 
       if (data.user) {
+        // Criar cliente SaaS se for cliente e adicionar roles
+        if (userType === "client") {
+          // Criar cliente SaaS
+          const { data: saasClient, error: saasError } = await supabase
+            .from('saas_clients')
+            .insert({
+              nome: businessName,
+              email: email,
+              plano: 'basico'
+            })
+            .select()
+            .single()
+
+          if (saasError) throw saasError
+
+          // Atualizar perfil com saas_client_id
+          await supabase
+            .from('user_profiles')
+            .update({ saas_client_id: saasClient.id })
+            .eq('user_id', data.user.id)
+
+          // Criar role de client_owner
+          await supabase
+            .from('user_roles')
+            .insert({
+              user_id: data.user.id,
+              saas_client_id: saasClient.id,
+              role: 'client_owner'
+            })
+        } else if (userType === "super_admin") {
+          // Criar role de super_admin
+          await supabase
+            .from('user_roles')
+            .insert({
+              user_id: data.user.id,
+              saas_client_id: null,
+              role: 'super_admin'
+            })
+        }
+
         toast({
           title: "Cadastro realizado!",
           description: "Verifique seu email para confirmar sua conta."
@@ -238,20 +293,45 @@ const Auth = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="business-name">Nome da Barbearia</Label>
-                  <div className="relative">
-                    <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="business-name"
-                      type="text"
-                      placeholder="Nome da sua barbearia"
-                      value={businessName}
-                      onChange={(e) => setBusinessName(e.target.value)}
-                      className="pl-9"
-                      required
-                    />
-                  </div>
+                  <Label htmlFor="user-type">Tipo de Usuário</Label>
+                  <Select value={userType} onValueChange={(value: "client" | "super_admin") => setUserType(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="client">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4" />
+                          Cliente (Proprietário de Barbearia)
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="super_admin">
+                        <div className="flex items-center gap-2">
+                          <Crown className="h-4 w-4" />
+                          Super Administrador SaaS
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+
+                {userType === "client" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="business-name">Nome da Barbearia</Label>
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="business-name"
+                        type="text"
+                        placeholder="Nome da sua barbearia"
+                        value={businessName}
+                        onChange={(e) => setBusinessName(e.target.value)}
+                        className="pl-9"
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
                 
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>

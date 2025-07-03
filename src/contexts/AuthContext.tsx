@@ -2,11 +2,32 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/integrations/supabase/client'
 
+interface UserProfile {
+  id: string
+  user_id: string
+  saas_client_id: string | null
+  nome: string
+  email: string
+  telefone: string | null
+  avatar_url: string | null
+  ativo: boolean
+}
+
+interface UserRole {
+  role: 'super_admin' | 'client_owner' | 'barber' | 'receptionist'
+  saas_client_id: string | null
+}
+
 interface AuthContextType {
   user: User | null
   session: Session | null
+  userProfile: UserProfile | null
+  userRoles: UserRole[]
   loading: boolean
+  isSuperAdmin: boolean
+  isClientOwner: boolean
   signOut: () => Promise<void>
+  refetchUserData: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -26,7 +47,45 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [userRoles, setUserRoles] = useState<UserRole[]>([])
   const [loading, setLoading] = useState(true)
+
+  const isSuperAdmin = userRoles.some(role => role.role === 'super_admin')
+  const isClientOwner = userRoles.some(role => role.role === 'client_owner')
+
+  const fetchUserData = async (userId: string) => {
+    try {
+      // Buscar perfil do usuário
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
+
+      if (profile) {
+        setUserProfile(profile)
+      }
+
+      // Buscar roles do usuário
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role, saas_client_id')
+        .eq('user_id', userId)
+
+      if (roles) {
+        setUserRoles(roles)
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error)
+    }
+  }
+
+  const refetchUserData = async () => {
+    if (user?.id) {
+      await fetchUserData(user.id)
+    }
+  }
 
   useEffect(() => {
     // Configurar listener de mudanças de auth PRIMEIRO
@@ -34,14 +93,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       (event, session) => {
         setSession(session)
         setUser(session?.user ?? null)
-        setLoading(false)
         
-        // Defer qualquer carregamento adicional
         if (session?.user) {
+          // Defer data fetching to prevent deadlocks
           setTimeout(() => {
-            // Aqui pode carregar dados do usuário se necessário
+            fetchUserData(session.user.id)
           }, 0)
+        } else {
+          setUserProfile(null)
+          setUserRoles([])
         }
+        
+        setLoading(false)
       }
     )
 
@@ -49,6 +112,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
+      
+      if (session?.user) {
+        fetchUserData(session.user.id)
+      }
+      
       setLoading(false)
     })
 
@@ -58,6 +126,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signOut = async () => {
     try {
       // Limpar estado local primeiro
+      setUserProfile(null)
+      setUserRoles([])
+      
       Object.keys(localStorage).forEach((key) => {
         if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
           localStorage.removeItem(key)
@@ -81,8 +152,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const value = {
     user,
     session,
+    userProfile,
+    userRoles,
     loading,
+    isSuperAdmin,
+    isClientOwner,
     signOut,
+    refetchUserData,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
