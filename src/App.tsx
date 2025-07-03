@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound";
 import AgendarPublico from "./pages/AgendarPublico";
 import GerenciarAgendamento from "./pages/GerenciarAgendamento";
 import Analytics from "./pages/Analytics";
+import Financeiro from "./pages/Financeiro";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,11 @@ const App = () => (
             <Route path="/analytics" element={
               <ProtectedRoute>
                 <Analytics />
+              </ProtectedRoute>
+            } />
+            <Route path="/financeiro" element={
+              <ProtectedRoute>
+                <Financeiro />
               </ProtectedRoute>
             } />
             <Route path="/agendar/:slug" element={<AgendarPublico />} />

@@ -121,17 +121,41 @@ export const useFinanceiro = () => {
 
   const fetchMovimentacoes = async () => {
     try {
-      // Simulate empty data for now - will be updated when DB types are refreshed
-      setMovimentacoes([])
+      const { data: unidades } = await supabase
+        .from('unidades')
+        .select('id')
+        .eq('saas_client_id', userProfile?.saas_client_id)
+
+      if (!unidades || unidades.length === 0) return
+
+      const unidadeIds = unidades.map(u => u.id)
+
+      const { data, error } = await supabase
+        .from('movimentacoes_financeiras')
+        .select('*')
+        .in('unidade_id', unidadeIds)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      setMovimentacoes((data || []) as MovimentacaoFinanceira[])
     } catch (error) {
       console.error('Error fetching financial movements:', error)
+      setMovimentacoes([])
     }
   }
 
   const adicionarMovimentacao = async (movimentacao: Omit<MovimentacaoFinanceira, 'id' | 'created_at'>) => {
     try {
-      console.log('Adding financial movement:', movimentacao)
-      return { success: true }
+      const { data, error } = await supabase
+        .from('movimentacoes_financeiras')
+        .insert([movimentacao])
+        .select()
+
+      if (error) throw error
+
+      await fetchDadosFinanceiros()
+      return { success: true, data: data?.[0] }
     } catch (error) {
       console.error('Error adding financial movement:', error)
       return { success: false, error }
@@ -140,7 +164,17 @@ export const useFinanceiro = () => {
 
   const marcarComoPago = async (id: string) => {
     try {
-      console.log('Marking as paid:', id)
+      const { error } = await supabase
+        .from('movimentacoes_financeiras')
+        .update({ 
+          status: 'pago',
+          data_pagamento: new Date().toISOString().split('T')[0]
+        })
+        .eq('id', id)
+
+      if (error) throw error
+
+      await fetchDadosFinanceiros()
       return { success: true }
     } catch (error) {
       console.error('Error marking as paid:', error)
