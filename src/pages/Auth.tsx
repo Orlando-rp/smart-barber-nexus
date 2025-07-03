@@ -69,11 +69,33 @@ const Auth = () => {
       if (error) throw error
 
       if (data.user) {
+        const { data: rolesData, error: rolesError } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.user.id)
+          .maybeSingle();
+      
+        if (rolesError || !rolesData) {
+          toast({
+            variant: "destructive",
+            title: "Erro",
+            description: "Não foi possível identificar o tipo de usuário."
+          });
+          return;
+        }
+      
+        const role = rolesData.role;
+      
         toast({
           title: "Login realizado!",
           description: "Bem-vindo ao BarberSmart."
-        })
-        // Navigation will be handled by ProtectedRoute after user data loads
+        });
+      
+        if (role === "super_admin") {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
       }
     } catch (error: any) {
       toast({
