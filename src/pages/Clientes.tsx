@@ -1,177 +1,60 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Users, Plus, Search, Phone, Mail, Edit, Trash2 } from "lucide-react"
-import { supabase } from "@/integrations/supabase/client"
-import { useAuth } from "@/contexts/AuthContext"
-import { useToast } from "@/hooks/use-toast"
-
-interface Cliente {
-  id: string
-  nome: string
-  telefone?: string
-  email?: string
-  data_nascimento?: string
-  observacoes?: string
-  total_visitas?: number
-  ultima_visita?: string
-  unidade_id: string
-}
+import { Badge } from "@/components/ui/badge"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useClientes } from "@/hooks/useClientes"
+import { CreateClienteDialog } from "@/components/clientes/CreateClienteDialog"
+import { 
+  Users, 
+  Plus, 
+  Search, 
+  MoreHorizontal, 
+  Edit, 
+  Calendar,
+  Phone,
+  Mail
+} from "lucide-react"
+import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
 
 const Clientes = () => {
-  const { userProfile, isSuperAdmin } = useAuth()
-  const { toast } = useToast()
-  const [clientes, setClientes] = useState<Cliente[]>([])
-  const [unidades, setUnidades] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [newClienteOpen, setNewClienteOpen] = useState(false)
-  const [editingCliente, setEditingCliente] = useState<Cliente | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
-  const [formData, setFormData] = useState({
-    nome: "",
-    telefone: "",
-    email: "",
-    data_nascimento: "",
-    observacoes: "",
-    unidade_id: ""
-  })
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [selectedCliente, setSelectedCliente] = useState(null)
+  const { clientes, loading } = useClientes()
 
-  useEffect(() => {
-    if (userProfile) {
-      fetchData()
-    }
-  }, [userProfile])
+  const filteredClientes = clientes.filter(cliente =>
+    cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    cliente.telefone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    cliente.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
-  const fetchData = async () => {
-    try {
-      setLoading(true)
-
-      // Buscar unidades primeiro
-      let unidadesQuery = supabase.from('unidades').select('*')
-      if (!isSuperAdmin && userProfile?.saas_client_id) {
-        unidadesQuery = unidadesQuery.eq('saas_client_id', userProfile.saas_client_id)
-      }
-      const { data: unidadesData, error: unidadesError } = await unidadesQuery
-      if (unidadesError) throw unidadesError
-      setUnidades(unidadesData || [])
-
-      if (!unidadesData || unidadesData.length === 0) {
-        setLoading(false)
-        return
-      }
-
-      const unidadeIds = unidadesData.map(u => u.id)
-
-      // Buscar clientes
-      const { data: clientesData, error: clientesError } = await supabase
-        .from('clientes')
-        .select('*')
-        .in('unidade_id', unidadeIds)
-        .order('nome', { ascending: true })
-
-      if (clientesError) throw clientesError
-      setClientes(clientesData || [])
-
-      // Definir unidade padrão no form
-      if (unidadesData.length > 0 && !formData.unidade_id) {
-        setFormData(prev => ({ ...prev, unidade_id: unidadesData[0].id }))
-      }
-
-    } catch (error: any) {
-      console.error('Error fetching data:', error)
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Erro ao carregar dados"
-      })
-    } finally {
-      setLoading(false)
-    }
+  const handleEdit = (cliente: any) => {
+    setSelectedCliente(cliente)
+    setDialogOpen(true)
   }
 
-  const handleCreateCliente = async () => {
-    try {
-      const { error } = await supabase
-        .from('clientes')
-        .insert([formData])
-
-      if (error) throw error
-
-      toast({
-        title: "Cliente criado!",
-        description: "Cliente criado com sucesso."
-      })
-
-      setNewClienteOpen(false)
-      setFormData({
-        nome: "",
-        telefone: "",
-        email: "",
-        data_nascimento: "",
-        observacoes: "",
-        unidade_id: formData.unidade_id
-      })
-      fetchData()
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Erro ao criar cliente"
-      })
-    }
-  }
-
-  const handleUpdateCliente = async () => {
-    if (!editingCliente) return
-    
-    try {
-      const { error } = await supabase
-        .from('clientes')
-        .update(formData)
-        .eq('id', editingCliente.id)
-
-      if (error) throw error
-
-      toast({
-        title: "Cliente atualizado!",
-        description: "Cliente atualizado com sucesso."
-      })
-
-      setEditingCliente(null)
-      setFormData({
-        nome: "",
-        telefone: "",
-        email: "",
-        data_nascimento: "",
-        observacoes: "",
-        unidade_id: formData.unidade_id
-      })
-      fetchData()
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Erro ao atualizar cliente"
-      })
-    }
-  }
-
-  const handleEdit = (cliente: Cliente) => {
-    setEditingCliente(cliente)
-    setFormData({
-      nome: cliente.nome,
-      telefone: cliente.telefone || "",
-      email: cliente.email || "",
-      data_nascimento: cliente.data_nascimento || "",
-      observacoes: cliente.observacoes || "",
-      unidade_id: cliente.unidade_id
-    })
+  const handleCloseDialog = () => {
+    setDialogOpen(false)
+    setSelectedCliente(null)
   }
 
   if (loading) {
@@ -180,318 +63,220 @@ const Clientes = () => {
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Carregando...</p>
+            <p className="text-muted-foreground">Carregando clientes...</p>
           </div>
         </div>
       </DashboardLayout>
     )
   }
 
-  const clientesFiltrados = clientes.filter(cliente =>
-    cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (cliente.telefone && cliente.telefone.includes(searchTerm))
-  )
-
-  const totalClientes = clientes.length
-  const clientesAtivos = clientes.filter(c => {
-    if (!c.ultima_visita) return false
-    const ultimaVisita = new Date(c.ultima_visita)
-    const trintaDiasAtras = new Date()
-    trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30)
-    return ultimaVisita >= trintaDiasAtras
-  }).length
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Clientes</h1>
             <p className="text-muted-foreground">
-              Gerencie sua base de clientes e histórico de atendimentos
+              Gerencie seus clientes e histórico de atendimentos.
             </p>
           </div>
-          
-          <Dialog open={newClienteOpen} onOpenChange={setNewClienteOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Novo Cliente
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Novo Cliente</DialogTitle>
-                <DialogDescription>
-                  Adicionar um novo cliente à base de dados.
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="nome">Nome *</Label>
-                  <Input
-                    id="nome"
-                    value={formData.nome}
-                    onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
-                    placeholder="Nome completo do cliente"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="telefone">Telefone</Label>
-                    <Input
-                      id="telefone"
-                      value={formData.telefone}
-                      onChange={(e) => setFormData(prev => ({ ...prev, telefone: e.target.value }))}
-                      placeholder="(11) 99999-9999"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="data_nascimento">Data de Nascimento</Label>
-                    <Input
-                      id="data_nascimento"
-                      type="date"
-                      value={formData.data_nascimento}
-                      onChange={(e) => setFormData(prev => ({ ...prev, data_nascimento: e.target.value }))}
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="cliente@email.com"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="observacoes">Observações</Label>
-                  <Textarea
-                    id="observacoes"
-                    value={formData.observacoes}
-                    onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
-                    placeholder="Informações adicionais sobre o cliente..."
-                  />
-                </div>
-              </div>
-              
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setNewClienteOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleCreateCliente}>
-                  Criar Cliente
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Cliente
+          </Button>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium">
                 Total de Clientes
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalClientes}</div>
-              <p className="text-xs text-muted-foreground">cadastrados</p>
+              <div className="text-2xl font-bold">{clientes.length}</div>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium">
                 Clientes Ativos
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{clientesAtivos}</div>
-              <p className="text-xs text-muted-foreground">últimos 30 dias</p>
+              <div className="text-2xl font-bold">
+                {clientes.filter(c => c.total_visitas && c.total_visitas > 0).length}
+              </div>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Taxa de Retenção
+              <CardTitle className="text-sm font-medium">
+                Novos Este Mês
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
-                {totalClientes > 0 ? Math.round((clientesAtivos / totalClientes) * 100) : 0}%
+              <div className="text-2xl font-bold">
+                {clientes.filter(c => {
+                  const clienteDate = new Date(c.created_at)
+                  const now = new Date()
+                  return clienteDate.getMonth() === now.getMonth() && 
+                         clienteDate.getFullYear() === now.getFullYear()
+                }).length}
               </div>
-              <p className="text-xs text-muted-foreground">clientes ativos</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Média de Visitas
+              </CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {clientes.length > 0 
+                  ? Math.round(clientes.reduce((acc, c) => acc + (c.total_visitas || 0), 0) / clientes.length)
+                  : 0
+                }
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Search and Filters */}
+        {/* Search and Filter */}
         <Card>
           <CardHeader>
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-              <CardTitle>Lista de Clientes</CardTitle>
-              <div className="relative w-full sm:w-auto">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nome ou telefone..."
-                  className="pl-9 w-full sm:w-80"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
+            <CardTitle>Lista de Clientes</CardTitle>
+            <CardDescription>
+              Visualize e gerencie todos os seus clientes
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {clientesFiltrados.map((cliente) => (
-                <div
-                  key={cliente.id}
-                  className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src="" />
-                      <AvatarFallback className="text-sm">
-                        {cliente.nome.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium">{cliente.nome}</p>
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        {cliente.telefone && (
-                          <div className="flex items-center gap-1">
-                            <Phone className="h-3 w-3" />
-                            {cliente.telefone}
-                          </div>
-                        )}
-                        {cliente.email && (
-                          <div className="flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
-                            {cliente.email}
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {cliente.total_visitas || 0} visitas
-                        {cliente.ultima_visita && ` • Última: ${new Date(cliente.ultima_visita).toLocaleDateString('pt-BR')}`}
-                      </p>
-                    </div>
-                  </div>
+            <div className="flex items-center space-x-2 mb-4">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome, telefone ou email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-sm"
+              />
+            </div>
 
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleEdit(cliente)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-
-              {clientesFiltrados.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Nenhum cliente encontrado.</p>
-                </div>
-              )}
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Contato</TableHead>
+                    <TableHead>Visitas</TableHead>
+                    <TableHead>Última Visita</TableHead>
+                    <TableHead>Cadastro</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredClientes.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8">
+                        <div className="text-muted-foreground">
+                          {searchTerm ? "Nenhum cliente encontrado" : "Nenhum cliente cadastrado"}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredClientes.map((cliente) => (
+                      <TableRow key={cliente.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{cliente.nome}</div>
+                            {cliente.data_nascimento && (
+                              <div className="text-sm text-muted-foreground">
+                                {format(new Date(cliente.data_nascimento), "dd/MM/yyyy", { locale: ptBR })}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            {cliente.telefone && (
+                              <div className="flex items-center text-sm">
+                                <Phone className="h-3 w-3 mr-1" />
+                                {cliente.telefone}
+                              </div>
+                            )}
+                            {cliente.email && (
+                              <div className="flex items-center text-sm">
+                                <Mail className="h-3 w-3 mr-1" />
+                                {cliente.email}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={cliente.total_visitas ? "default" : "secondary"}>
+                            {cliente.total_visitas || 0} visitas
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {cliente.ultima_visita ? (
+                            <div className="text-sm">
+                              {format(new Date(cliente.ultima_visita), "dd/MM/yyyy", { locale: ptBR })}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">Nunca</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            {format(new Date(cliente.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Abrir menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                              <DropdownMenuItem
+                                onClick={() => handleEdit(cliente)}
+                              >
+                                <Edit className="mr-2 h-4 w-4" />
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem>
+                                <Calendar className="mr-2 h-4 w-4" />
+                                Ver Histórico
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>
 
-        {/* Edit Dialog */}
-        <Dialog open={!!editingCliente} onOpenChange={(open) => !open && setEditingCliente(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Editar Cliente</DialogTitle>
-              <DialogDescription>
-                Atualizar informações do cliente.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit_nome">Nome *</Label>
-                <Input
-                  id="edit_nome"
-                  value={formData.nome}
-                  onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
-                  placeholder="Nome completo do cliente"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit_telefone">Telefone</Label>
-                  <Input
-                    id="edit_telefone"
-                    value={formData.telefone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, telefone: e.target.value }))}
-                    placeholder="(11) 99999-9999"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="edit_data_nascimento">Data de Nascimento</Label>
-                  <Input
-                    id="edit_data_nascimento"
-                    type="date"
-                    value={formData.data_nascimento}
-                    onChange={(e) => setFormData(prev => ({ ...prev, data_nascimento: e.target.value }))}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="edit_email">Email</Label>
-                <Input
-                  id="edit_email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="cliente@email.com"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="edit_observacoes">Observações</Label>
-                <Textarea
-                  id="edit_observacoes"
-                  value={formData.observacoes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
-                  placeholder="Informações adicionais sobre o cliente..."
-                />
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEditingCliente(null)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleUpdateCliente}>
-                Atualizar Cliente
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {/* Dialog */}
+        <CreateClienteDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          cliente={selectedCliente}
+          onClose={handleCloseDialog}
+        />
       </div>
     </DashboardLayout>
   )
