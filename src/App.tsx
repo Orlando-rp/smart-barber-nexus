@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
@@ -24,12 +24,12 @@ import Configuracoes from "./pages/Configuracoes";
 
 // Admin
 import { SuperAdminLayout } from "@/components/layout/SuperAdminLayout";
-import DashboardSaas from "./pages/admin/DashboardSaas";
+import DashboardSaas from "./pages/SuperAdmin"; // Página inicial do painel admin
 import ClientesSaas from "./pages/admin/ClientesSaas";
 import RelatoriosAdmin from "./pages/admin/RelatoriosAdmin";
 import SistemaConfiguracoes from "./pages/admin/SistemaConfiguracoes";
 import UsuariosAdmin from "./pages/admin/UsuariosAdmin";
-import ConfiguracoesAdmin from "./pages/admin/ConfiguracoesAdmin";
+import ConfiguracoesAdmin from "./pages/admin/ConfiguracoesAdmin"; // Se existir
 
 const queryClient = new QueryClient();
 
@@ -41,6 +41,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+
             {/* Rota de login */}
             <Route path="/auth" element={<Auth />} />
 
@@ -67,11 +68,11 @@ const App = () => (
               </ProtectedRoute>
             }>
               <Route index element={<DashboardSaas />} />
-              <Route path="clientes" element={</admin/ClientesSaas />} />
-              <Route path="relatorios" element={</admin/RelatoriosAdmin />} />
-              <Route path="sistema" element={</admin/SistemaConfiguracoes />} />
-              <Route path="usuarios" element={</admin/UsuariosAdmin />} />
-              <Route path="configuracoes" element={</admin/ConfiguracoesAdmin />} /> {/* opcional */}
+              <Route path="clientes" element={<ClientesSaas />} />
+              <Route path="relatorios" element={<RelatoriosAdmin />} />
+              <Route path="sistema" element={<SistemaConfiguracoes />} />
+              <Route path="usuarios" element={<UsuariosAdmin />} />
+              <Route path="configuracoes" element={<ConfiguracoesAdmin />} />
             </Route>
 
             {/* Página 404 */}
