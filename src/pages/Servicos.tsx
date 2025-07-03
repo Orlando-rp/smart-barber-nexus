@@ -62,11 +62,22 @@ const Servicos = () => {
 
   const fetchData = async () => {
     try {
+      // Verificar se tem saas_client_id
+      if (!userProfile?.saas_client_id) {
+        toast({
+          variant: "destructive",
+          title: "Erro de configuração",
+          description: "Cliente SaaS não configurado"
+        })
+        setLoading(false)
+        return
+      }
+
       // Buscar unidades primeiro
       const { data: unidadesData, error: unidadesError } = await supabase
         .from('unidades')
         .select('id, nome')
-        .eq('saas_client_id', userProfile?.saas_client_id)
+        .eq('saas_client_id', userProfile.saas_client_id)
 
       if (unidadesError) throw unidadesError
       setUnidades(unidadesData || [])
