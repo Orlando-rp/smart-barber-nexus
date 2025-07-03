@@ -31,17 +31,17 @@ const menuItems = [
   },
   {
     title: "Clientes SaaS",
-    url: "/ClientesSaas", // corrigido
+    url: "/admin/ClientesSaas", // corrigido
     icon: Building2,
   },
   {
     title: "Relatórios",
-    url: "/RelatoriosAdmin", // corrigido
+    url: "/admin/RelatoriosAdmin", // corrigido
     icon: FileText,
   },
   {
     title: "Sistema",
-    url: "/SistemaConfiguracoes", // corrigido
+    url: "/admin/SistemaConfiguracoes", // corrigido
     icon: Database,
   },
 ];
