@@ -233,10 +233,14 @@ const Auth = () => {
 
           toast({
             title: "Cadastro realizado!",
-            description: "Verifique seu e-mail para ativar sua conta. Após isso, faça login normalmente."
+            description: "Verifique seu email para confirmar sua conta."
           })
           
-          navigate("/auth")
+          // Redirecionamento manual forçado após o toast
+          setTimeout(() => {
+            window.location.href = "/auth"
+          }, 3000)
+
       }
     } catch (error: any) {
       toast({
