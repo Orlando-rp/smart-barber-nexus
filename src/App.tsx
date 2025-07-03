@@ -12,6 +12,8 @@ import Servicos from "./pages/Servicos";
 import SuperAdmin from "./pages/SuperAdmin";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import AgendarPublico from "./pages/AgendarPublico";
+import GerenciarAgendamento from "./pages/GerenciarAgendamento";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +51,8 @@ const App = () => (
                 <SuperAdmin />
               </ProtectedRoute>
             } />
+            <Route path="/agendar/:slug" element={<AgendarPublico />} />
+            <Route path="/agendamento/:token" element={<GerenciarAgendamento />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
