@@ -31,17 +31,17 @@ const menuItems = [
   },
   {
     title: "Clientes SaaS",
-    url: "/admin/clientes", // corrigido
+    url: "/admin/ClientesSaas", // corrigido
     icon: Building2,
   },
   {
     title: "Relatórios",
-    url: "/admin/relatorios", // corrigido
+    url: "/admin/RelatoriosSdmin", // corrigido
     icon: FileText,
   },
   {
     title: "Sistema",
-    url: "/admin/sistema", // corrigido
+    url: "/admin/SistemaConfiguracoes", // corrigido
     icon: Database,
   },
 ];
@@ -49,12 +49,12 @@ const menuItems = [
 const bottomMenuItems = [
   {
     title: "Usuários Admin",
-    url: "/admin/usuarios", // corrigido
+    url: "/admin/UsuariosAdmin", // corrigido
     icon: Users,
   },
   {
     title: "Configurações",
-    url: "/admin/configuracoes", // corrigido
+    url: "/admin/ConfiguracoesAdmin", // corrigido
     icon: Settings,
   },
 ];
@@ -73,7 +73,7 @@ export function SuperAdminSidebar() {
             <Crown className="w-4 h-4 text-primary-foreground" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-sidebar-foreground">BarberSmart</h2>
+            <h2 className="text-lg font-bold text-sidebar-foreground">Barber Smart</h2>
             <p className="text-xs text-sidebar-foreground/70">Super Admin</p>
           </div>
         </div>
