@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { useAuth } from "@/contexts/AuthContext"
-import { useToast } from "@/hooks/use-toast"
+import { useErrorHandler } from "@/hooks/useErrorHandler"
 
 interface Agendamento {
   id: string
@@ -40,7 +40,7 @@ export const useAgendamentos = () => {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([])
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
-  const { toast } = useToast()
+  const { handleError, handleSuccess } = useErrorHandler()
 
   const fetchAgendamentos = async () => {
     if (!user) return
@@ -80,11 +80,8 @@ export const useAgendamentos = () => {
 
       setAgendamentos(data || [])
     } catch (error) {
-      console.error('Erro ao buscar agendamentos:', error)
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar os agendamentos.",
-        variant: "destructive",
+      handleError(error, {
+        customMessage: "Não foi possível carregar os agendamentos."
       })
     } finally {
       setLoading(false)
@@ -183,19 +180,13 @@ export const useAgendamentos = () => {
 
       if (clientesError) throw clientesError
 
-      toast({
-        title: "Dados criados!",
-        description: "Dados de demonstração foram criados com sucesso.",
-      })
+      handleSuccess("Dados de demonstração foram criados com sucesso.")
 
       // Recarregar dados
       fetchAgendamentos()
     } catch (error) {
-      console.error('Erro ao criar dados de demonstração:', error)
-      toast({
-        title: "Erro",
-        description: "Não foi possível criar os dados de demonstração.",
-        variant: "destructive",
+      handleError(error, {
+        customMessage: "Não foi possível criar os dados de demonstração."
       })
     }
   }
@@ -209,19 +200,13 @@ export const useAgendamentos = () => {
 
       if (error) throw error
 
-      toast({
-        title: "Sucesso",
-        description: "Agendamento criado com sucesso!",
-      })
+      handleSuccess("Agendamento criado com sucesso!")
 
       fetchAgendamentos()
       return data[0]
     } catch (error) {
-      console.error('Erro ao criar agendamento:', error)
-      toast({
-        title: "Erro",
-        description: "Não foi possível criar o agendamento.",
-        variant: "destructive",
+      handleError(error, {
+        customMessage: "Não foi possível criar o agendamento."
       })
       throw error
     }
@@ -237,19 +222,13 @@ export const useAgendamentos = () => {
 
       if (error) throw error
 
-      toast({
-        title: "Sucesso",
-        description: "Agendamento atualizado com sucesso!",
-      })
+      handleSuccess("Agendamento atualizado com sucesso!")
 
       fetchAgendamentos()
       return data[0]
     } catch (error) {
-      console.error('Erro ao atualizar agendamento:', error)
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar o agendamento.",
-        variant: "destructive",
+      handleError(error, {
+        customMessage: "Não foi possível atualizar o agendamento."
       })
       throw error
     }
@@ -264,18 +243,12 @@ export const useAgendamentos = () => {
 
       if (error) throw error
 
-      toast({
-        title: "Sucesso",
-        description: `Status atualizado para ${status}!`,
-      })
+      handleSuccess(`Status atualizado para ${status}!`)
 
       fetchAgendamentos()
     } catch (error) {
-      console.error('Erro ao atualizar status:', error)
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar o status.",
-        variant: "destructive",
+      handleError(error, {
+        customMessage: "Não foi possível atualizar o status."
       })
     }
   }
@@ -289,18 +262,12 @@ export const useAgendamentos = () => {
 
       if (error) throw error
 
-      toast({
-        title: "Sucesso",
-        description: "Agendamento removido com sucesso!",
-      })
+      handleSuccess("Agendamento removido com sucesso!")
 
       fetchAgendamentos()
     } catch (error) {
-      console.error('Erro ao deletar agendamento:', error)
-      toast({
-        title: "Erro",
-        description: "Não foi possível remover o agendamento.",
-        variant: "destructive",
+      handleError(error, {
+        customMessage: "Não foi possível remover o agendamento."
       })
     }
   }

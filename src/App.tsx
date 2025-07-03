@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Agendamentos from "./pages/Agendamentos";
 import Clientes from "./pages/Clientes";
 import Servicos from "./pages/Servicos";
+import Unidades from "./pages/Unidades";
 import SuperAdmin from "./pages/SuperAdmin";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -49,6 +50,11 @@ const App = () => (
             <Route path="/servicos" element={
               <ProtectedRoute>
                 <Servicos />
+              </ProtectedRoute>
+            } />
+            <Route path="/unidades" element={
+              <ProtectedRoute>
+                <Unidades />
               </ProtectedRoute>
             } />
             <Route path="/admin" element={

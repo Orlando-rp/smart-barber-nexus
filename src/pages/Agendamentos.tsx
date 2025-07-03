@@ -3,6 +3,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { TableSkeleton, StatsCardsSkeleton } from "@/components/ui/loading-skeleton"
 import { Badge } from "@/components/ui/badge"
 import {
   Table,
@@ -104,11 +105,18 @@ const Agendamentos = () => {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Carregando agendamentos...</p>
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Agendamentos</h1>
+              <p className="text-muted-foreground">
+                Gerencie todos os agendamentos da sua barbearia
+              </p>
+            </div>
           </div>
+          
+          <StatsCardsSkeleton cards={5} />
+          <TableSkeleton />
         </div>
       </DashboardLayout>
     )
