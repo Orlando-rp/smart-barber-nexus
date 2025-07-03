@@ -74,7 +74,7 @@ export function CreateAgendamentoDialog({
   const form = useForm<AgendamentoFormData>({
     resolver: zodResolver(agendamentoSchema),
     defaultValues: {
-      cliente_id: "",
+      cliente_id: "novo",
       cliente_nome: "",
       cliente_telefone: "",
       cliente_email: "",
@@ -116,7 +116,7 @@ export function CreateAgendamentoDialog({
       })
     } else {
       form.reset({
-        cliente_id: "",
+        cliente_id: "novo",
         cliente_nome: "",
         cliente_telefone: "",
         cliente_email: "",
@@ -153,7 +153,7 @@ export function CreateAgendamentoDialog({
 
     try {
       const agendamentoData = {
-        cliente_id: data.cliente_id || null,
+        cliente_id: data.cliente_id === "novo" ? null : data.cliente_id || null,
         cliente_nome: data.cliente_nome || null,
         cliente_telefone: data.cliente_telefone || null,
         cliente_email: data.cliente_email || null,
@@ -214,7 +214,7 @@ export function CreateAgendamentoDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Novo cliente</SelectItem>
+                        <SelectItem value="novo">Novo cliente</SelectItem>
                         {clientes.map((cliente) => (
                           <SelectItem key={cliente.id} value={cliente.id}>
                             {cliente.nome}
