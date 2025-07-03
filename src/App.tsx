@@ -67,11 +67,11 @@ const App = () => (
               </ProtectedRoute>
             }>
               <Route index element={<DashboardSaas />} />
-              <Route path="clientes" element={<ClientesSaas />} />
-              <Route path="relatorios" element={<RelatoriosAdmin />} />
-              <Route path="sistema" element={<SistemaConfiguracoes />} />
-              <Route path="usuarios" element={<UsuariosAdmin />} />
-              <Route path="configuracoes" element={<ConfiguracoesAdmin />} /> {/* opcional */}
+              <Route path="clientes" element={</admin/ClientesSaas />} />
+              <Route path="relatorios" element={</admin/RelatoriosAdmin />} />
+              <Route path="sistema" element={</admin/SistemaConfiguracoes />} />
+              <Route path="usuarios" element={</admin/UsuariosAdmin />} />
+              <Route path="configuracoes" element={</admin/ConfiguracoesAdmin />} /> {/* opcional */}
             </Route>
 
             {/* Página 404 */}
