@@ -39,7 +39,6 @@ const profissionalSchema = z.object({
   nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   telefone: z.string().optional(),
-  especialidades: z.array(z.string()).optional(),
   servicos: z.array(z.string()).optional(),
   comissao_percentual: z.number().min(0).max(100).optional(),
   ativo: z.boolean().default(true),
@@ -54,18 +53,6 @@ interface CreateProfissionalDialogProps {
   onClose: () => void
 }
 
-const especialidadesOptions = [
-  "Corte Masculino",
-  "Corte Feminino",
-  "Barba",
-  "Bigode",
-  "Sobrancelha",
-  "Hidratação",
-  "Relaxamento",
-  "Escova",
-  "Penteado",
-  "Maquiagem",
-]
 
 export function CreateProfissionalDialog({
   open,
@@ -74,7 +61,6 @@ export function CreateProfissionalDialog({
   onClose,
 }: CreateProfissionalDialogProps) {
   const [unidades, setUnidades] = useState<any[]>([])
-  const [selectedEspecialidades, setSelectedEspecialidades] = useState<string[]>([])
   const [selectedServicos, setSelectedServicos] = useState<string[]>([])
   const { createProfissional, updateProfissional } = useProfissionais()
   const { servicos } = useServicos()
@@ -87,7 +73,6 @@ export function CreateProfissionalDialog({
       nome: "",
       email: "",
       telefone: "",
-      especialidades: [],
       servicos: [],
       comissao_percentual: 0,
       ativo: true,
@@ -115,36 +100,23 @@ export function CreateProfissionalDialog({
         nome: profissional.nome,
         email: profissional.email || "",
         telefone: profissional.telefone || "",
-        especialidades: profissional.especialidades || [],
         servicos: profissional.servicos || [],
         comissao_percentual: profissional.comissao_percentual || 0,
         ativo: profissional.ativo,
       })
-      setSelectedEspecialidades(profissional.especialidades || [])
       setSelectedServicos(profissional.servicos || [])
     } else {
       form.reset({
         nome: "",
         email: "",
         telefone: "",
-        especialidades: [],
         servicos: [],
         comissao_percentual: 0,
         ativo: true,
       })
-      setSelectedEspecialidades([])
       setSelectedServicos([])
     }
   }, [profissional, form])
-
-  const handleEspecialidadeToggle = (especialidade: string) => {
-    const newEspecialidades = selectedEspecialidades.includes(especialidade)
-      ? selectedEspecialidades.filter(e => e !== especialidade)
-      : [...selectedEspecialidades, especialidade]
-    
-    setSelectedEspecialidades(newEspecialidades)
-    form.setValue('especialidades', newEspecialidades)
-  }
 
   const handleServicoToggle = (servicoId: string) => {
     const newServicos = selectedServicos.includes(servicoId)
@@ -168,11 +140,10 @@ export function CreateProfissionalDialog({
         nome: data.nome,
         email: data.email || null,
         telefone: data.telefone || null,
-        especialidades: selectedEspecialidades,
         servicos: selectedServicos,
         comissao_percentual: data.comissao_percentual || 0,
         ativo: data.ativo,
-        unidade_id: unidades[0].id, // Por simplicidade, usar a primeira unidade
+        unidade_id: unidades[0].id,
       }
 
       if (profissional) {
@@ -277,36 +248,13 @@ export function CreateProfissionalDialog({
             />
 
             <div className="space-y-2">
-              <Label>Especialidades</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {especialidadesOptions.map((especialidade) => (
-                  <div key={especialidade} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id={especialidade}
-                      checked={selectedEspecialidades.includes(especialidade)}
-                      onChange={() => handleEspecialidadeToggle(especialidade)}
-                      className="w-4 h-4"
-                    />
-                    <Label 
-                      htmlFor={especialidade} 
-                      className="text-sm font-normal cursor-pointer"
-                    >
-                      {especialidade}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
               <Label>Serviços que pode realizar</Label>
               {servicos.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   Nenhum serviço cadastrado. Cadastre serviços primeiro na página de Serviços.
                 </p>
               ) : (
-                <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
+                <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto border rounded-md p-3">
                   {servicos.map((servico) => (
                     <div key={servico.id} className="flex items-center space-x-2">
                       <input
@@ -318,9 +266,14 @@ export function CreateProfissionalDialog({
                       />
                       <Label 
                         htmlFor={`servico-${servico.id}`} 
-                        className="text-sm font-normal cursor-pointer"
+                        className="text-sm font-normal cursor-pointer flex-1"
                       >
-                        {servico.nome} - R$ {servico.preco.toFixed(2)}
+                        <div>
+                          <span className="font-medium">{servico.nome}</span>
+                          <span className="text-muted-foreground ml-2">
+                            R$ {servico.preco.toFixed(2)} • {servico.duracao_minutos}min
+                          </span>
+                        </div>
                       </Label>
                     </div>
                   ))}

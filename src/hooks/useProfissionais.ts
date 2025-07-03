@@ -8,7 +8,6 @@ interface Profissional {
   nome: string
   email?: string
   telefone?: string
-  especialidades?: string[]
   servicos?: string[]
   comissao_percentual?: number
   ativo: boolean

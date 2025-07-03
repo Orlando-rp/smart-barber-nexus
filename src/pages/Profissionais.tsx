@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { CreateProfissionalDialog } from "@/components/profissionais/CreateProfissionalDialog"
 import { useProfissionais } from "@/hooks/useProfissionais"
+import { useServicos } from "@/hooks/useServicos"
 
 const Profissionais = () => {
   const [searchTerm, setSearchTerm] = useState("")
@@ -37,6 +38,8 @@ const Profissionais = () => {
     deleteProfissional,
     refetch 
   } = useProfissionais()
+
+  const { servicos } = useServicos()
 
   const filteredProfissionais = profissionais.filter(prof =>
     prof.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -63,9 +66,15 @@ const Profissionais = () => {
       .toUpperCase()
   }
 
-  const formatEspecialidades = (especialidades: string[] | null) => {
-    if (!especialidades || especialidades.length === 0) return 'Nenhuma'
-    return especialidades.join(', ')
+  const formatServicos = (servicos: string[] | null, servicosData: any[]) => {
+    if (!servicos || servicos.length === 0) return 'Nenhum serviço'
+    const servicosNomes = servicos.map(servicoId => {
+      const servico = servicosData.find(s => s.id === servicoId)
+      return servico ? servico.nome : 'Serviço não encontrado'
+    })
+    return servicosNomes.length > 2 
+      ? `${servicosNomes.slice(0, 2).join(', ')} +${servicosNomes.length - 2} mais`
+      : servicosNomes.join(', ')
   }
 
   const formatComissao = (comissao: number | null) => {
@@ -171,7 +180,7 @@ const Profissionais = () => {
                   <TableRow>
                     <TableHead>Profissional</TableHead>
                     <TableHead>Contato</TableHead>
-                    <TableHead>Especialidades</TableHead>
+                    <TableHead>Serviços</TableHead>
                     <TableHead>Comissão</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
@@ -219,12 +228,7 @@ const Profissionais = () => {
                         </TableCell>
                         <TableCell>
                           <div className="text-sm">
-                            {formatEspecialidades(profissional.especialidades)}
-                            {profissional.servicos && profissional.servicos.length > 0 && (
-                              <div className="text-xs text-muted-foreground mt-1">
-                                Serviços: {profissional.servicos.length}
-                              </div>
-                            )}
+                            {formatServicos(profissional.servicos, servicos)}
                           </div>
                         </TableCell>
                         <TableCell>
