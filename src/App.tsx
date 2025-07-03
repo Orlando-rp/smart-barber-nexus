@@ -23,12 +23,13 @@ import Notificacoes from "./pages/Notificacoes";
 import Configuracoes from "./pages/Configuracoes";
 
 // Admin
-import { SuperAdminLayout } from "@/components/layouts/SuperAdminLayout"; // 👈 certifique-se do caminho
+import { SuperAdminLayout } from "@/components/layouts/SuperAdminLayout";
+import DashboardSaas from "./pages/admin/DashboardSaas";
 import ClientesSaas from "./pages/admin/ClientesSaas";
 import RelatoriosAdmin from "./pages/admin/RelatoriosAdmin";
 import SistemaConfiguracoes from "./pages/admin/SistemaConfiguracoes";
 import UsuariosAdmin from "./pages/admin/UsuariosAdmin";
-import DashboardSaas from "./pages/admin/DashboardSaas"; // 👈 caso tenha uma página inicial de admin
+import ConfiguracoesAdmin from "./pages/admin/ConfiguracoesAdmin"; // Opcional se existir
 
 const queryClient = new QueryClient();
 
@@ -40,44 +41,46 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Rota de login */}
             <Route path="/auth" element={<Auth />} />
 
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Index />
-              </ProtectedRoute>
-            } />
+            {/* Rotas protegidas principais */}
+            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/agendamentos" element={<ProtectedRoute><Agendamentos /></ProtectedRoute>} />
+            <Route path="/clientes" element={<ProtectedRoute><Clientes /></ProtectedRoute>} />
+            <Route path="/servicos" element={<ProtectedRoute><Servicos /></ProtectedRoute>} />
+            <Route path="/unidades" element={<ProtectedRoute><Unidades /></ProtectedRoute>} />
+            <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+            <Route path="/financeiro" element={<ProtectedRoute><Financeiro /></ProtectedRoute>} />
+            <Route path="/profissionais" element={<ProtectedRoute><Profissionais /></ProtectedRoute>} />
+            <Route path="/notificacoes" element={<ProtectedRoute><Notificacoes /></ProtectedRoute>} />
+            <Route path="/configuracoes" element={<ProtectedRoute><Configuracoes /></ProtectedRoute>} />
 
-            <Route path="/agendamentos" element={
-              <ProtectedRoute>
-                <Agendamentos />
-              </ProtectedRoute>
-            } />
+            {/* Rotas públicas (sem autenticação) */}
+            <Route path="/agendar/:slug" element={<AgendarPublico />} />
+            <Route path="/agendamento/:token" element={<GerenciarAgendamento />} />
 
-            <Route path="/clientes" element={
-              <ProtectedRoute>
-                <Clientes />
+            {/* Rotas do Super Admin com layout */}
+            <Route path="/admin" element={
+              <ProtectedRoute requireSuperAdmin={true}>
+                <SuperAdminLayout />
               </ProtectedRoute>
-            } />
+            }>
+              <Route index element={<DashboardSaas />} />
+              <Route path="clientes" element={<ClientesSaas />} />
+              <Route path="relatorios" element={<RelatoriosAdmin />} />
+              <Route path="sistema" element={<SistemaConfiguracoes />} />
+              <Route path="usuarios" element={<UsuariosAdmin />} />
+              <Route path="configuracoes" element={<ConfiguracoesAdmin />} /> {/* opcional */}
+            </Route>
 
-            <Route path="/servicos" element={
-              <ProtectedRoute>
-                <Servicos />
-              </ProtectedRoute>
-            } />
+            {/* Página 404 */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
+  </QueryClientProvider>
+);
 
-            <Route path="/unidades" element={
-              <ProtectedRoute>
-                <Unidades />
-              </ProtectedRoute>
-            } />
-
-            <Route path="/analytics" element={
-              <ProtectedRoute>
-                <Analytics />
-              </ProtectedRoute>
-            } />
-
-            <Route path="/financeiro" element={
-              <ProtectedRoute>
-                <Financeiro />
+export default App;
