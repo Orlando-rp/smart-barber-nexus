@@ -9,7 +9,269 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      agendamentos: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          data_hora: string
+          duracao_minutos: number
+          id: string
+          observacoes: string | null
+          preco: number
+          profissional_id: string
+          servico_id: string
+          status: string
+          unidade_id: string
+          updated_at: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          data_hora: string
+          duracao_minutos: number
+          id?: string
+          observacoes?: string | null
+          preco: number
+          profissional_id: string
+          servico_id: string
+          status?: string
+          unidade_id: string
+          updated_at?: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          data_hora?: string
+          duracao_minutos?: number
+          id?: string
+          observacoes?: string | null
+          preco?: number
+          profissional_id?: string
+          servico_id?: string
+          status?: string
+          unidade_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agendamentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agendamentos_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agendamentos_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agendamentos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clientes: {
+        Row: {
+          created_at: string
+          data_nascimento: string | null
+          email: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          telefone: string | null
+          total_visitas: number | null
+          ultima_visita: string | null
+          unidade_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_nascimento?: string | null
+          email?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          telefone?: string | null
+          total_visitas?: number | null
+          ultima_visita?: string | null
+          unidade_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_nascimento?: string | null
+          email?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          telefone?: string | null
+          total_visitas?: number | null
+          ultima_visita?: string | null
+          unidade_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clientes_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profissionais: {
+        Row: {
+          ativo: boolean
+          comissao_percentual: number | null
+          created_at: string
+          email: string | null
+          especialidades: string[] | null
+          horario_trabalho: Json | null
+          id: string
+          nome: string
+          telefone: string | null
+          unidade_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          comissao_percentual?: number | null
+          created_at?: string
+          email?: string | null
+          especialidades?: string[] | null
+          horario_trabalho?: Json | null
+          id?: string
+          nome: string
+          telefone?: string | null
+          unidade_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          comissao_percentual?: number | null
+          created_at?: string
+          email?: string | null
+          especialidades?: string[] | null
+          horario_trabalho?: Json | null
+          id?: string
+          nome?: string
+          telefone?: string | null
+          unidade_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profissionais_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      servicos: {
+        Row: {
+          ativo: boolean
+          categoria: string | null
+          created_at: string
+          descricao: string | null
+          duracao_minutos: number
+          id: string
+          nome: string
+          preco: number
+          unidade_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: string | null
+          created_at?: string
+          descricao?: string | null
+          duracao_minutos?: number
+          id?: string
+          nome: string
+          preco: number
+          unidade_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string | null
+          created_at?: string
+          descricao?: string | null
+          duracao_minutos?: number
+          id?: string
+          nome?: string
+          preco?: number
+          unidade_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "servicos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      unidades: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          endereco: string | null
+          horario_funcionamento: Json | null
+          id: string
+          logo_url: string | null
+          nome: string
+          telefone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          endereco?: string | null
+          horario_funcionamento?: Json | null
+          id?: string
+          logo_url?: string | null
+          nome: string
+          telefone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          endereco?: string | null
+          horario_funcionamento?: Json | null
+          id?: string
+          logo_url?: string | null
+          nome?: string
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
