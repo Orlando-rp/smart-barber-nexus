@@ -231,10 +231,12 @@ const Auth = () => {
           }
         }
 
-        toast({
-          title: "Cadastro realizado!",
-          description: "Verifique seu email para confirmar sua conta."
-        })
+          toast({
+            title: "Cadastro realizado!",
+            description: "Verifique seu e-mail para ativar sua conta. Após isso, faça login normalmente."
+          })
+          
+          navigate("/auth")
       }
     } catch (error: any) {
       toast({
