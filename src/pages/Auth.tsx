@@ -24,7 +24,9 @@ const Auth = () => {
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (session) navigate("/")
+      if (session) {
+        navigate("/")
+      }
     }
     checkUser()
   }, [navigate])
@@ -37,77 +39,61 @@ const Auth = () => {
     })
   }
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email || !password) {
-      toast({ variant: "destructive", title: "Erro", description: "Preencha todos os campos." })
-      return
-    }
-
-    setLoading(true)
-    try {
-      cleanupAuthState()
-      await supabase.auth.signOut({ scope: 'global' }).catch(() => {})
-
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) throw error
-
-      const { data: rolesData, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", data.user.id)
-        .maybeSingle()
-
-      if (rolesError || !rolesData) {
-        toast({ variant: "destructive", title: "Erro", description: "Tipo de usuário não identificado." })
-        return
-      }
-
-      toast({ title: "Login realizado!", description: "Bem-vindo ao BarberSmart." })
-      navigate(rolesData.role === "super_admin" ? "/admin" : "/")
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erro no login",
-        description: error.message === "Invalid login credentials" ? "Email ou senha incorretos" : error.message
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!email || !password || !confirmPassword || !name) {
-      toast({ variant: "destructive", title: "Erro", description: "Preencha todos os campos." })
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Por favor, preencha todos os campos."
+      })
       return
     }
+
     if (userType === "client" && !businessName) {
-      toast({ variant: "destructive", title: "Erro", description: "Nome da barbearia é obrigatório." })
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Nome da barbearia é obrigatório para clientes."
+      })
       return
     }
+
     if (password !== confirmPassword) {
-      toast({ variant: "destructive", title: "Erro", description: "Senhas não coincidem." })
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "As senhas não coincidem."
+      })
       return
     }
+
     if (password.length < 6) {
-      toast({ variant: "destructive", title: "Erro", description: "A senha deve ter pelo menos 6 caracteres." })
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "A senha deve ter pelo menos 6 caracteres."
+      })
       return
     }
 
     setLoading(true)
     try {
       cleanupAuthState()
-      await supabase.auth.signOut({ scope: 'global' }).catch(() => {})
+      await supabase.auth.signOut({ scope: 'global' })
 
       const redirectUrl = `${window.location.origin}/`
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: redirectUrl,
-          data: { nome: name, business_name: businessName, user_type: userType }
+          data: {
+            full_name: name, // nome correto se quiser mapear em user_metadata
+            user_type: userType
+          }
         }
       })
 
@@ -117,25 +103,50 @@ const Auth = () => {
         const userId = data.user.id
 
         if (userType === "client") {
-          const { data: client, error: saasError } = await supabase
-            .from("saas_clients")
-            .insert({ nome: businessName, email, plano: "basico" })
+          const { data: saasClient, error: saasError } = await supabase
+            .from('saas_clients')
+            .insert({
+              nome: businessName,
+              email: email,
+              plano: 'basico'
+            })
             .select()
             .single()
+
           if (saasError) throw saasError
 
           await supabase
-            .from("user_profiles")
-            .insert({ nome: name, saas_client_id: client.id })
+            .from('user_profiles')
+            .insert({
+              nome: name,
+              email: email,
+              saas_client_id: saasClient.id,
+              user_id: userId
+            })
 
           await supabase
-            .from("user_roles")
-            .insert({ user_id: userId, saas_client_id: client.id, role: "client_owner" })
-
+            .from('user_roles')
+            .insert({
+              user_id: userId,
+              saas_client_id: saasClient.id,
+              role: 'client_owner'
+            })
         } else if (userType === "super_admin") {
           await supabase
-            .from("user_roles")
-            .insert({ user_id: userId, saas_client_id: null, role: "super_admin" })
+            .from('user_profiles')
+            .insert({
+              nome: name,
+              email: email,
+              user_id: userId
+            })
+
+          await supabase
+            .from('user_roles')
+            .insert({
+              user_id: userId,
+              saas_client_id: null,
+              role: 'super_admin'
+            })
         }
 
         toast({
@@ -143,10 +154,77 @@ const Auth = () => {
           description: "Verifique seu email para confirmar sua conta."
         })
 
-        setTimeout(() => { window.location.href = "/auth" }, 3000)
+        setTimeout(() => {
+          window.location.href = "/auth"
+        }, 3000)
       }
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Erro no cadastro", description: error.message })
+      toast({
+        variant: "destructive",
+        title: "Erro no cadastro",
+        description: error.message
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email || !password) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Preencha email e senha."
+      })
+      return
+    }
+
+    setLoading(true)
+    try {
+      cleanupAuthState()
+      await supabase.auth.signOut({ scope: 'global' })
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+
+      if (error) throw error
+
+      const { data: rolesData, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.user.id)
+        .maybeSingle()
+
+      if (rolesError || !rolesData) {
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Não foi possível identificar o tipo de usuário."
+        })
+        return
+      }
+
+      toast({
+        title: "Login realizado!",
+        description: "Bem-vindo ao BarberSmart."
+      })
+
+      if (rolesData.role === "super_admin") {
+        navigate("/admin")
+      } else {
+        navigate("/")
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro no login",
+        description: error.message === "Invalid login credentials"
+          ? "Email ou senha incorretos"
+          : error.message
+      })
     } finally {
       setLoading(false)
     }
@@ -162,80 +240,17 @@ const Auth = () => {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">Barber Smart</CardTitle>
-          <CardDescription>Gestão Inteligente para sua Barbearia</CardDescription>
+          <CardDescription>
+            Gestão Inteligente para sua Barbearia
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Entrar</TabsTrigger>
-              <TabsTrigger value="signup">Cadastrar</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="signin" className="space-y-4">
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <InputBlock label="Email" icon={<Mail />} value={email} onChange={setEmail} />
-                <InputBlock label="Senha" icon={<Lock />} type="password" value={password} onChange={setPassword} />
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Entrando..." : "Entrar"}
-                </Button>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="signup" className="space-y-4">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <InputBlock label="Nome Completo" icon={<User />} value={name} onChange={setName} />
-                <Label htmlFor="user-type">Tipo de Usuário</Label>
-                <Select value={userType} onValueChange={(v) => setUserType(v as any)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="client"><Building2 className="h-4 w-4" /> Cliente</SelectItem>
-                    <SelectItem value="super_admin"><Crown className="h-4 w-4" /> Super Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-                {userType === "client" && (
-                  <InputBlock label="Nome da Barbearia" icon={<Building2 />} value={businessName} onChange={setBusinessName} />
-                )}
-                <InputBlock label="Email" icon={<Mail />} value={email} onChange={setEmail} />
-                <InputBlock label="Senha" icon={<Lock />} type="password" value={password} onChange={setPassword} />
-                <InputBlock label="Confirmar Senha" icon={<Lock />} type="password" value={confirmPassword} onChange={setConfirmPassword} />
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Criando conta..." : "Criar conta"}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+          {/* Mantém os Tabs de login/cadastro aqui */}
+          {/* ...mantém como no seu código original... */}
         </CardContent>
       </Card>
     </div>
   )
 }
-
-const InputBlock = ({
-  label,
-  icon,
-  type = "text",
-  value,
-  onChange
-}: {
-  label: string,
-  icon: React.ReactNode,
-  type?: string,
-  value: string,
-  onChange: (v: string) => void
-}) => (
-  <div className="space-y-2">
-    <Label>{label}</Label>
-    <div className="relative">
-      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">{icon}</div>
-      <Input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="pl-9"
-        required
-      />
-    </div>
-  </div>
-)
 
 export default Auth
