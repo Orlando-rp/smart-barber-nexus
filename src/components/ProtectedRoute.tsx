@@ -13,36 +13,22 @@ export const ProtectedRoute = ({ children, requireSuperAdmin = false }: Protecte
   const location = useLocation()
 
   useEffect(() => {
-    console.log('ProtectedRoute effect:', { 
-      loading, 
-      user: !!user, 
-      userDataLoaded, 
-      isSuperAdmin, 
-      currentPath: location.pathname,
-      requireSuperAdmin 
-    })
-
     if (!loading && !user) {
-      console.log('Redirecting to auth - no user')
       navigate('/auth')
       return
     }
 
     if (!loading && user && userDataLoaded) {
-      console.log('User data loaded, checking redirection')
       const correctPath = getRedirectPath()
-      console.log('Correct path for user:', correctPath)
       
-      // Se está na página raiz e deveria estar na página de admin
-    if (correctPath === '/admin' && location.pathname !== '/admin') {
-      console.log('Super admin logado e fora de /admin, redirecionando...')
-      navigate('/admin')
-      return
-    }
+      // Se é super admin mas está fora da área admin (e não em rota pública)
+      if (correctPath === '/admin' && !location.pathname.startsWith('/admin') && !location.pathname.startsWith('/agendar')) {
+        navigate('/admin')
+        return
+      }
      
       // Verificar se usuário tem acesso à rota protegida para super admin
       if (requireSuperAdmin && !isSuperAdmin) {
-        console.log('Redirecting non-super-admin from protected route')
         navigate('/')
         return
       }
