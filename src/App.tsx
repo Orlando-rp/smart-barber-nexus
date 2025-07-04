@@ -22,14 +22,17 @@ import Profissionais from "./pages/Profissionais";
 import Notificacoes from "./pages/Notificacoes";
 import Configuracoes from "./pages/Configuracoes";
 
+// Layout
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
+
 // Admin
-import { SuperAdminLayout } from "@/components/layout/SuperAdminLayout";
-import DashboardSaas from "./pages/SuperAdmin"; // Página inicial do painel admin
+import DashboardSaas from "./pages/SuperAdmin";
 import ClientesSaas from "./pages/admin/ClientesSaas";
 import RelatoriosAdmin from "./pages/admin/RelatoriosAdmin";
 import SistemaConfiguracoes from "./pages/admin/SistemaConfiguracoes";
 import UsuariosAdmin from "./pages/admin/UsuariosAdmin";
-import ConfiguracoesAdmin from "./pages/admin/ConfiguracoesAdmin"; // Se existir
+import ConfiguracoesAdmin from "./pages/admin/ConfiguracoesAdmin";
 
 const queryClient = new QueryClient();
 
@@ -45,17 +48,23 @@ const App = () => (
             {/* Rota de login */}
             <Route path="/auth" element={<Auth />} />
 
-            {/* Rotas protegidas principais */}
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/agendamentos" element={<ProtectedRoute><Agendamentos /></ProtectedRoute>} />
-            <Route path="/clientes" element={<ProtectedRoute><Clientes /></ProtectedRoute>} />
-            <Route path="/servicos" element={<ProtectedRoute><Servicos /></ProtectedRoute>} />
-            <Route path="/unidades" element={<ProtectedRoute><Unidades /></ProtectedRoute>} />
-            <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-            <Route path="/financeiro" element={<ProtectedRoute><Financeiro /></ProtectedRoute>} />
-            <Route path="/profissionais" element={<ProtectedRoute><Profissionais /></ProtectedRoute>} />
-            <Route path="/notificacoes" element={<ProtectedRoute><Notificacoes /></ProtectedRoute>} />
-            <Route path="/configuracoes" element={<ProtectedRoute><Configuracoes /></ProtectedRoute>} />
+            {/* Rotas protegidas principais com layout */}
+            <Route path="/*" element={
+              <ProtectedRoute>
+                <UniversalLayout variant="default" />
+              </ProtectedRoute>
+            }>
+              <Route index element={<Index />} />
+              <Route path="agendamentos" element={<Agendamentos />} />
+              <Route path="clientes" element={<Clientes />} />
+              <Route path="servicos" element={<Servicos />} />
+              <Route path="unidades" element={<Unidades />} />
+              <Route path="analytics" element={<Analytics />} />
+              <Route path="financeiro" element={<Financeiro />} />
+              <Route path="profissionais" element={<Profissionais />} />
+              <Route path="notificacoes" element={<Notificacoes />} />
+              <Route path="configuracoes" element={<Configuracoes />} />
+            </Route>
 
             {/* Rotas públicas (sem autenticação) */}
             <Route path="/agendar/:slug" element={<AgendarPublico />} />
@@ -64,7 +73,7 @@ const App = () => (
             {/* Rotas do Super Admin com layout */}
             <Route path="/admin/*" element={
               <ProtectedRoute requireSuperAdmin={true}>
-                <SuperAdminLayout />
+                <UniversalLayout variant="admin" />
               </ProtectedRoute>
             }>
               <Route index element={<DashboardSaas />} />
