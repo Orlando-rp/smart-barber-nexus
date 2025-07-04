@@ -1,4 +1,3 @@
-// src/pages/Auth.tsx
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,9 +22,11 @@ const Auth = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
       if (session) navigate("/")
-    })
+    }
+    checkUser()
   }, [navigate])
 
   const cleanupAuthState = () => {
@@ -46,26 +47,24 @@ const Auth = () => {
     setLoading(true)
     try {
       cleanupAuthState()
-      await supabase.auth.signOut({ scope: 'global' })
+      await supabase.auth.signOut({ scope: 'global' }).catch(() => {})
 
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
 
-      if (data.user) {
-        const { data: rolesData, error: rolesError } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", data.user.id)
-          .maybeSingle()
+      const { data: rolesData, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.user.id)
+        .maybeSingle()
 
-        if (rolesError || !rolesData) {
-          toast({ variant: "destructive", title: "Erro", description: "Tipo de usuário não identificado." })
-          return
-        }
-
-        toast({ title: "Login realizado!", description: "Bem-vindo ao BarberSmart." })
-        navigate(rolesData.role === "super_admin" ? "/admin" : "/")
+      if (rolesError || !rolesData) {
+        toast({ variant: "destructive", title: "Erro", description: "Tipo de usuário não identificado." })
+        return
       }
+
+      toast({ title: "Login realizado!", description: "Bem-vindo ao BarberSmart." })
+      navigate(rolesData.role === "super_admin" ? "/admin" : "/")
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -80,69 +79,72 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!email || !password || !confirmPassword || !name || (userType === "client" && !businessName)) {
-      toast({ variant: "destructive", title: "Erro", description: "Preencha todos os campos obrigatórios." })
+    if (!email || !password || !confirmPassword || !name) {
+      toast({ variant: "destructive", title: "Erro", description: "Preencha todos os campos." })
       return
     }
-
+    if (userType === "client" && !businessName) {
+      toast({ variant: "destructive", title: "Erro", description: "Nome da barbearia é obrigatório." })
+      return
+    }
     if (password !== confirmPassword) {
       toast({ variant: "destructive", title: "Erro", description: "Senhas não coincidem." })
       return
     }
-
     if (password.length < 6) {
-      toast({ variant: "destructive", title: "Erro", description: "Senha deve ter no mínimo 6 caracteres." })
+      toast({ variant: "destructive", title: "Erro", description: "A senha deve ter pelo menos 6 caracteres." })
       return
     }
 
     setLoading(true)
     try {
       cleanupAuthState()
-      await supabase.auth.signOut({ scope: 'global' })
+      await supabase.auth.signOut({ scope: 'global' }).catch(() => {})
 
+      const redirectUrl = `${window.location.origin}/`
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: { name, business_name: businessName, user_type: userType }
+          emailRedirectTo: redirectUrl,
+          data: { nome: name, business_name: businessName, user_type: userType }
         }
       })
 
       if (error) throw error
-      const user = data.user
-      if (!user) return
 
-      if (userType === "client") {
-        const { data: client, error: clientError } = await supabase
-          .from("saas_clients")
-          .insert({ nome: businessName, email, plano: "basico" })
-          .select()
-          .single()
+      if (data.user) {
+        const userId = data.user.id
 
-        if (clientError) throw clientError
+        if (userType === "client") {
+          const { data: client, error: saasError } = await supabase
+            .from("saas_clients")
+            .insert({ nome: businessName, email, plano: "basico" })
+            .select()
+            .single()
+          if (saasError) throw saasError
 
-        await supabase.from("user_profiles").insert({
-          user_id: user.id,
-          name,
-          saas_client_id: client.id
+          await supabase
+            .from("user_profiles")
+            .insert({ nome: name, saas_client_id: client.id })
+
+          await supabase
+            .from("user_roles")
+            .insert({ user_id: userId, saas_client_id: client.id, role: "client_owner" })
+
+        } else if (userType === "super_admin") {
+          await supabase
+            .from("user_roles")
+            .insert({ user_id: userId, saas_client_id: null, role: "super_admin" })
+        }
+
+        toast({
+          title: "Cadastro realizado!",
+          description: "Verifique seu email para confirmar sua conta."
         })
 
-        await supabase.from("user_roles").insert({
-          user_id: user.id,
-          saas_client_id: client.id,
-          role: "client_owner"
-        })
-      } else if (userType === "super_admin") {
-        await supabase.from("user_roles").insert({
-          user_id: user.id,
-          saas_client_id: null,
-          role: "super_admin"
-        })
+        setTimeout(() => { window.location.href = "/auth" }, 3000)
       }
-
-      toast({ title: "Cadastro realizado!", description: "Verifique seu email para confirmar sua conta." })
-      setTimeout(() => window.location.href = "/auth", 3000)
     } catch (error: any) {
       toast({ variant: "destructive", title: "Erro no cadastro", description: error.message })
     } finally {
@@ -168,32 +170,37 @@ const Auth = () => {
               <TabsTrigger value="signin">Entrar</TabsTrigger>
               <TabsTrigger value="signup">Cadastrar</TabsTrigger>
             </TabsList>
-            <TabsContent value="signin">
-              {/* Login */}
-              <form onSubmit={handleSignIn} className="space-y-4 mt-4">
-                <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                <Input type="password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                <Button type="submit" className="w-full" disabled={loading}>{loading ? "Entrando..." : "Entrar"}</Button>
+
+            <TabsContent value="signin" className="space-y-4">
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <InputBlock label="Email" icon={<Mail />} value={email} onChange={setEmail} />
+                <InputBlock label="Senha" icon={<Lock />} type="password" value={password} onChange={setPassword} />
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Entrando..." : "Entrar"}
+                </Button>
               </form>
             </TabsContent>
-            <TabsContent value="signup">
-              {/* Cadastro */}
-              <form onSubmit={handleSignUp} className="space-y-4 mt-4">
-                <Input type="text" placeholder="Nome completo" value={name} onChange={(e) => setName(e.target.value)} required />
-                <Select value={userType} onValueChange={(val) => setUserType(val as any)}>
+
+            <TabsContent value="signup" className="space-y-4">
+              <form onSubmit={handleSignUp} className="space-y-4">
+                <InputBlock label="Nome Completo" icon={<User />} value={name} onChange={setName} />
+                <Label htmlFor="user-type">Tipo de Usuário</Label>
+                <Select value={userType} onValueChange={(v) => setUserType(v as any)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="client">Cliente</SelectItem>
-                    <SelectItem value="super_admin">Super Admin</SelectItem>
+                    <SelectItem value="client"><Building2 className="h-4 w-4" /> Cliente</SelectItem>
+                    <SelectItem value="super_admin"><Crown className="h-4 w-4" /> Super Admin</SelectItem>
                   </SelectContent>
                 </Select>
                 {userType === "client" && (
-                  <Input type="text" placeholder="Nome da barbearia" value={businessName} onChange={(e) => setBusinessName(e.target.value)} required />
+                  <InputBlock label="Nome da Barbearia" icon={<Building2 />} value={businessName} onChange={setBusinessName} />
                 )}
-                <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                <Input type="password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                <Input type="password" placeholder="Confirmar senha" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
-                <Button type="submit" className="w-full" disabled={loading}>{loading ? "Cadastrando..." : "Criar conta"}</Button>
+                <InputBlock label="Email" icon={<Mail />} value={email} onChange={setEmail} />
+                <InputBlock label="Senha" icon={<Lock />} type="password" value={password} onChange={setPassword} />
+                <InputBlock label="Confirmar Senha" icon={<Lock />} type="password" value={confirmPassword} onChange={setConfirmPassword} />
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Criando conta..." : "Criar conta"}
+                </Button>
               </form>
             </TabsContent>
           </Tabs>
@@ -202,5 +209,33 @@ const Auth = () => {
     </div>
   )
 }
+
+const InputBlock = ({
+  label,
+  icon,
+  type = "text",
+  value,
+  onChange
+}: {
+  label: string,
+  icon: React.ReactNode,
+  type?: string,
+  value: string,
+  onChange: (v: string) => void
+}) => (
+  <div className="space-y-2">
+    <Label>{label}</Label>
+    <div className="relative">
+      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">{icon}</div>
+      <Input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="pl-9"
+        required
+      />
+    </div>
+  </div>
+)
 
 export default Auth
