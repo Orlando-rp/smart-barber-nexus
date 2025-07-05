@@ -58,12 +58,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const isClientOwner = userRoles.some(role => role.role === 'client_owner')
 
   const getRedirectPath = () => {
-    console.log('getRedirectPath called:', { isSuperAdmin, userRoles })
     if (isSuperAdmin) {
-      console.log('User is super admin, redirecting to /admin')
       return '/admin'
     }
-    console.log('User is not super admin, redirecting to /')
     return '/'
   }
 
@@ -89,11 +86,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         .eq('user_id', userId)
 
       if (roles) {
-        console.log('User roles loaded:', roles)
         setUserRoles(roles)
       }
       
-      console.log('User data loaded successfully')
       setUserDataLoaded(true)
     } catch (error) {
       console.error('Error fetching user data:', error)
@@ -111,7 +106,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Configurar listener de mudanças de auth PRIMEIRO
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('Auth state change:', event, session?.user?.email)
         setSession(session)
         setUser(session?.user ?? null)
         
@@ -132,7 +126,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     // DEPOIS verificar sessão existente
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session:', session?.user?.email)
       setSession(session)
       setUser(session?.user ?? null)
       

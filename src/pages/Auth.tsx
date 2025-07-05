@@ -178,13 +178,13 @@ const Auth = () => {
         }
 
         toast({
-          title: "Cadastro realizado!",
-          description: "Verifique seu email para confirmar sua conta."
+          title: "Conta criada com sucesso!",
+          description: `Bem-vindo ao BarberSmart! ${userType === "client" ? "Sua barbearia foi configurada." : "Acesso de administrador ativado."}`
         })
 
         setTimeout(() => {
-          window.location.href = "/auth"
-        }, 3000)
+          window.location.href = userType === "super_admin" ? "/admin" : "/"
+        }, 2000)
       }
     } catch (error: any) {
       toast({

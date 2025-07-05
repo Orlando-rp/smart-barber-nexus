@@ -754,6 +754,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_create_saas_client: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       generate_agendamento_token: {
         Args: Record<PropertyKey, never>
         Returns: string
