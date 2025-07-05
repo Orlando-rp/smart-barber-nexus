@@ -102,51 +102,79 @@ const Auth = () => {
       if (data.user) {
         const userId = data.user.id
 
-        if (userType === "client") {
-          const { data: saasClient, error: saasError } = await supabase
-            .from('saas_clients')
-            .insert({
-              nome: businessName,
-              email: email,
-              plano: 'basico'
-            })
-            .select()
-            .single()
+        try {
+          if (userType === "client") {
+            // 1. Primeiro: criar user_profile
+            const { error: profileError } = await supabase
+              .from('user_profiles')
+              .insert({
+                nome: name,
+                email: email,
+                user_id: userId
+              })
 
-          if (saasError) throw saasError
+            if (profileError) throw profileError
 
-          await supabase
-            .from('user_profiles')
-            .insert({
-              nome: name,
-              email: email,
-              saas_client_id: saasClient.id,
-              user_id: userId
-            })
+            // 2. Segundo: criar saas_client
+            const { data: saasClient, error: saasError } = await supabase
+              .from('saas_clients')
+              .insert({
+                nome: businessName,
+                email: email,
+                plano: 'basico'
+              })
+              .select()
+              .single()
 
-          await supabase
-            .from('user_roles')
-            .insert({
-              user_id: userId,
-              saas_client_id: saasClient.id,
-              role: 'client_owner'
-            })
-        } else if (userType === "super_admin") {
-          await supabase
-            .from('user_profiles')
-            .insert({
-              nome: name,
-              email: email,
-              user_id: userId
-            })
+            if (saasError) throw saasError
 
-          await supabase
-            .from('user_roles')
-            .insert({
-              user_id: userId,
-              saas_client_id: null,
-              role: 'super_admin'
-            })
+            // 3. Terceiro: atualizar user_profile com saas_client_id
+            const { error: updateProfileError } = await supabase
+              .from('user_profiles')
+              .update({ saas_client_id: saasClient.id })
+              .eq('user_id', userId)
+
+            if (updateProfileError) throw updateProfileError
+
+            // 4. Por último: criar user_role
+            const { error: roleError } = await supabase
+              .from('user_roles')
+              .insert({
+                user_id: userId,
+                saas_client_id: saasClient.id,
+                role: 'client_owner'
+              })
+
+            if (roleError) throw roleError
+
+          } else if (userType === "super_admin") {
+            // 1. Primeiro: criar user_profile
+            const { error: profileError } = await supabase
+              .from('user_profiles')
+              .insert({
+                nome: name,
+                email: email,
+                user_id: userId
+              })
+
+            if (profileError) throw profileError
+
+            // 2. Segundo: criar user_role
+            const { error: roleError } = await supabase
+              .from('user_roles')
+              .insert({
+                user_id: userId,
+                saas_client_id: null,
+                role: 'super_admin'
+              })
+
+            if (roleError) throw roleError
+          }
+        } catch (dbError: any) {
+          // Se houver erro na criação dos dados, limpar o usuário criado
+          console.error('Erro ao criar dados do usuário:', dbError)
+          await supabase.auth.admin.deleteUser(userId)
+          throw new Error(`Erro ao configurar conta: ${dbError.message}`)
         }
 
         toast({
@@ -245,8 +273,155 @@ const Auth = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Mantém os Tabs de login/cadastro aqui */}
-          {/* ...mantém como no seu código original... */}
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="cadastro">Cadastro</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="login" className="space-y-4">
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Senha</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Sua senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Entrando...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4" />
+                      Entrar
+                    </div>
+                  )}
+                </Button>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="cadastro" className="space-y-4">
+              <form onSubmit={handleSignUp} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="user-type">Tipo de Usuário</Label>
+                  <Select value={userType} onValueChange={(value: "client" | "super_admin") => setUserType(value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="client">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4" />
+                          Proprietário de Barbearia
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="super_admin">
+                        <div className="flex items-center gap-2">
+                          <Crown className="w-4 h-4" />
+                          Super Administrador
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nome Completo</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Seu nome completo"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {userType === "client" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="business-name">Nome da Barbearia</Label>
+                    <Input
+                      id="business-name"
+                      type="text"
+                      placeholder="Nome da sua barbearia"
+                      value={businessName}
+                      onChange={(e) => setBusinessName(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="email-cadastro">Email</Label>
+                  <Input
+                    id="email-cadastro"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password-cadastro">Senha</Label>
+                  <Input
+                    id="password-cadastro"
+                    type="password"
+                    placeholder="Mínimo 6 caracteres"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirmar Senha</Label>
+                  <Input
+                    id="confirm-password"
+                    type="password"
+                    placeholder="Confirme sua senha"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Criando conta...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      Criar Conta
+                    </div>
+                  )}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
