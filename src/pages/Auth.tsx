@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useSearchParams } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -20,6 +21,10 @@ const Auth = () => {
   const [userType, setUserType] = useState<"client" | "super_admin">("client")
   const { toast } = useToast()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  
+  // Plano pré-selecionado via URL
+  const preSelectedPlan = searchParams.get('plano') || 'basico'
 
   useEffect(() => {
     const checkUser = async () => {
@@ -115,13 +120,15 @@ const Auth = () => {
 
             if (profileError) throw profileError
 
-            // 2. Segundo: criar saas_client
+            // 2. Segundo: criar saas_client com plano selecionado
+            const planPrices = { basico: 49.90, premium: 99.90, enterprise: 199.90 }
             const { data: saasClient, error: saasError } = await supabase
               .from('saas_clients')
               .insert({
                 nome: businessName,
                 email: email,
-                plano: 'basico'
+                plano: preSelectedPlan as 'basico' | 'premium' | 'enterprise',
+                preco_mensal: planPrices[preSelectedPlan as keyof typeof planPrices]
               })
               .select()
               .single()

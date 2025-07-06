@@ -34,6 +34,10 @@ import SistemaConfiguracoes from "./pages/admin/SistemaConfiguracoes";
 import UsuariosAdmin from "./pages/admin/UsuariosAdmin";
 import ConfiguracoesAdmin from "./pages/admin/ConfiguracoesAdmin";
 
+// Planos
+import Planos from "./pages/Planos";
+import MeuPlano from "./pages/MeuPlano";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -47,6 +51,9 @@ const App = () => (
 
             {/* Rota de login */}
             <Route path="/auth" element={<Auth />} />
+            
+            {/* Rota pública de planos */}
+            <Route path="/planos" element={<Planos />} />
 
             {/* Rotas protegidas principais com layout */}
             <Route path="/*" element={
@@ -64,6 +71,7 @@ const App = () => (
               <Route path="profissionais" element={<Profissionais />} />
               <Route path="notificacoes" element={<Notificacoes />} />
               <Route path="configuracoes" element={<Configuracoes />} />
+              <Route path="meu-plano" element={<MeuPlano />} />
             </Route>
 
             {/* Rotas públicas (sem autenticação) */}

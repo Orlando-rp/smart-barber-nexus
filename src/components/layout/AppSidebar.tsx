@@ -1,4 +1,4 @@
-import { Calendar, BarChart3, Users, Scissors, DollarSign, Settings, Building2 } from "lucide-react"
+import { Calendar, BarChart3, Users, Scissors, DollarSign, Settings, Building2, Crown } from "lucide-react"
 import { NavLink, useLocation } from "react-router-dom"
 
 import {
@@ -53,11 +53,16 @@ const bottomMenuItems = [
     url: "/unidades",
     icon: Building2,
   },
-  {
-    title: "Configurações",
-    url: "/configuracoes",
-    icon: Settings,
-  },
+    {
+      title: "Configurações",
+      url: "/configuracoes",
+      icon: Settings,
+    },
+    {
+      title: "Meu Plano",
+      url: "/meu-plano", 
+      icon: Crown,
+    },
 ]
 
 export function AppSidebar() {

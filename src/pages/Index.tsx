@@ -5,6 +5,8 @@ import { QuickActions } from "@/components/dashboard/QuickActions"
 import { RecentAppointments } from "@/components/dashboard/RecentAppointments"
 import { NotificationTemplates } from "@/components/dashboard/NotificationTemplates"
 import { PublicSchedulingInfo } from "@/components/dashboard/PublicSchedulingInfo"
+import { PlanoInfo } from "@/components/dashboard/PlanoInfo"
+import { LimitsWarning } from "@/components/dashboard/LimitsWarning"
 import { useAuth } from "@/contexts/AuthContext"
 import { useDashboardData } from "@/hooks/useDashboardData"
 
@@ -41,11 +43,15 @@ const Index = () => {
       {/* Stats Grid */}
       <DashboardStats stats={stats} />
 
-      {/* PWA Installation */}
+      {/* Avisos de Limite */}
+      <LimitsWarning />
+
+      {/* PWA Installation & Plano Info */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <PWAInstaller />
+        <PlanoInfo />
         <QuickActions />
-        <div className="md:col-span-2">
+        <div className="md:col-span-1 lg:col-span-1">
           <NotificationTemplates />
         </div>
       </div>

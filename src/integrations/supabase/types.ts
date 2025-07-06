@@ -488,14 +488,19 @@ export type Database = {
         Row: {
           cnpj: string | null
           created_at: string
+          data_inicio_plano: string | null
+          data_proxima_cobranca: string | null
           data_vencimento: string | null
           email: string
           endereco: string | null
+          historico_planos: Json | null
           id: string
           limite_unidades: number | null
           limite_usuarios: number | null
           nome: string
           plano: string | null
+          plano_tipo: Database["public"]["Enums"]["plano_tipo"] | null
+          preco_mensal: number | null
           status: string | null
           telefone: string | null
           updated_at: string
@@ -503,14 +508,19 @@ export type Database = {
         Insert: {
           cnpj?: string | null
           created_at?: string
+          data_inicio_plano?: string | null
+          data_proxima_cobranca?: string | null
           data_vencimento?: string | null
           email: string
           endereco?: string | null
+          historico_planos?: Json | null
           id?: string
           limite_unidades?: number | null
           limite_usuarios?: number | null
           nome: string
           plano?: string | null
+          plano_tipo?: Database["public"]["Enums"]["plano_tipo"] | null
+          preco_mensal?: number | null
           status?: string | null
           telefone?: string | null
           updated_at?: string
@@ -518,14 +528,19 @@ export type Database = {
         Update: {
           cnpj?: string | null
           created_at?: string
+          data_inicio_plano?: string | null
+          data_proxima_cobranca?: string | null
           data_vencimento?: string | null
           email?: string
           endereco?: string | null
+          historico_planos?: Json | null
           id?: string
           limite_unidades?: number | null
           limite_usuarios?: number | null
           nome?: string
           plano?: string | null
+          plano_tipo?: Database["public"]["Enums"]["plano_tipo"] | null
+          preco_mensal?: number | null
           status?: string | null
           telefone?: string | null
           updated_at?: string
@@ -758,6 +773,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      check_plan_limits: {
+        Args: { _saas_client_id: string; _resource_type: string }
+        Returns: boolean
+      }
       generate_agendamento_token: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -774,8 +793,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      update_client_plan: {
+        Args: { _saas_client_id: string; _new_plan: string; _new_price: number }
+        Returns: boolean
+      }
     }
     Enums: {
+      plano_tipo: "basico" | "premium" | "enterprise"
       user_role: "super_admin" | "client_owner" | "barber" | "receptionist"
     }
     CompositeTypes: {
@@ -892,6 +916,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      plano_tipo: ["basico", "premium", "enterprise"],
       user_role: ["super_admin", "client_owner", "barber", "receptionist"],
     },
   },
