@@ -58,7 +58,10 @@ const Contratacao = () => {
   const onSubmit = async (data: ContratoForm) => {
     setLoading(true)
     try {
+      console.log('🚀 Iniciando processo de contratação...', { email: data.email, plano: planoId })
+      
       // 1. Criar usuário na autenticação
+      console.log('📝 Criando usuário na autenticação...')
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -70,16 +73,39 @@ const Contratacao = () => {
         }
       })
 
-      if (authError) throw authError
+      if (authError) {
+        console.error('❌ Erro na autenticação:', authError)
+        throw authError
+      }
 
       if (!authData.user) {
+        console.error('❌ Usuário não foi criado')
         throw new Error('Erro ao criar usuário')
       }
 
+      console.log('✅ Usuário criado com sucesso:', authData.user.id)
+
       // 2. Aguardar um momento para garantir que o perfil foi criado pelo trigger
+      console.log('⏳ Aguardando criação do perfil...')
       await new Promise(resolve => setTimeout(resolve, 1000))
 
-      // 3. Criar cliente SaaS primeiro (antes de atualizar perfil)
+      // 3. Verificar se o perfil foi criado
+      console.log('🔍 Verificando perfil criado...')
+      const { data: profile, error: profileCheckError } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', authData.user.id)
+        .single()
+
+      if (profileCheckError) {
+        console.error('❌ Erro ao verificar perfil:', profileCheckError)
+        throw new Error('Perfil não foi criado automaticamente')
+      }
+
+      console.log('✅ Perfil encontrado:', profile)
+
+      // 4. Criar cliente SaaS
+      console.log('🏢 Criando cliente SaaS...')
       const { data: saasClient, error: saasError } = await supabase
         .from('saas_clients')
         .insert({
@@ -96,9 +122,15 @@ const Contratacao = () => {
         .select()
         .single()
 
-      if (saasError) throw saasError
+      if (saasError) {
+        console.error('❌ Erro ao criar cliente SaaS:', saasError)
+        throw saasError
+      }
 
-      // 4. Criar role de client_owner
+      console.log('✅ Cliente SaaS criado:', saasClient)
+
+      // 5. Criar role de client_owner
+      console.log('👑 Criando role de client_owner...')
       const { error: roleError } = await supabase
         .from('user_roles')
         .insert({
@@ -107,9 +139,15 @@ const Contratacao = () => {
           saas_client_id: saasClient.id
         })
 
-      if (roleError) throw roleError
+      if (roleError) {
+        console.error('❌ Erro ao criar role:', roleError)
+        throw roleError
+      }
 
-      // 5. Atualizar perfil do usuário com saas_client_id (por último)
+      console.log('✅ Role criada com sucesso')
+
+      // 6. Atualizar perfil do usuário com saas_client_id (por último)
+      console.log('👤 Atualizando perfil com saas_client_id...')
       const { error: profileError } = await supabase
         .from('user_profiles')
         .update({ 
@@ -119,7 +157,13 @@ const Contratacao = () => {
         })
         .eq('user_id', authData.user.id)
 
-      if (profileError) throw profileError
+      if (profileError) {
+        console.error('❌ Erro ao atualizar perfil:', profileError)
+        throw profileError
+      }
+
+      console.log('✅ Perfil atualizado com sucesso')
+      console.log('🎉 Processo de contratação concluído com sucesso!')
 
       toast({
         title: "Contratação realizada com sucesso!",
@@ -132,10 +176,11 @@ const Contratacao = () => {
       }, 3000)
 
     } catch (error: any) {
+      console.error('💥 Erro geral na contratação:', error)
       toast({
         variant: "destructive",
-        title: "Erro na contratação",
-        description: error.message
+        title: "Erro na contratação", 
+        description: error.message || "Erro desconhecido. Tente novamente."
       })
     } finally {
       setLoading(false)
