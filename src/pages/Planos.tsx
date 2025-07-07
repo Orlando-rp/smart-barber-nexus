@@ -69,8 +69,8 @@ const Planos = () => {
 
   const handleSelectPlan = async (planId: string) => {
     if (!user) {
-      // Redirecionar para auth com plano selecionado
-      navigate(`/auth?plano=${planId}`)
+      // Redirecionar para contratação com plano selecionado
+      navigate(`/contratacao?plano=${planId}`)
       return
     }
 

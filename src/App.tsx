@@ -37,6 +37,7 @@ import ConfiguracoesAdmin from "./pages/admin/ConfiguracoesAdmin";
 // Planos
 import Planos from "./pages/Planos";
 import MeuPlano from "./pages/MeuPlano";
+import Contratacao from "./pages/Contratacao";
 
 const queryClient = new QueryClient();
 
@@ -52,8 +53,9 @@ const App = () => (
             {/* Rota de login */}
             <Route path="/auth" element={<Auth />} />
             
-            {/* Rota pública de planos */}
+            {/* Rotas públicas de planos e contratação */}
             <Route path="/planos" element={<Planos />} />
+            <Route path="/contratacao" element={<Contratacao />} />
 
             {/* Rotas protegidas principais com layout */}
             <Route path="/*" element={
